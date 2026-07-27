@@ -74,12 +74,12 @@ enum ReminderFilters {
 
     static func isDueToday(_ reminder: Reminder, now: Date = Date()) -> Bool {
         guard let dueDate = reminder.dueDate, !reminder.isCompleted else { return false }
-        return Calendar.current.isDateInToday(dueDate) && dueDate >= now
+        return Calendar.current.isDate(dueDate, inSameDayAs: now) && dueDate >= now
     }
 
     static func isUpcoming(_ reminder: Reminder, now: Date = Date(), withinDays: Int = 7) -> Bool {
         guard let dueDate = reminder.dueDate, !reminder.isCompleted else { return false }
-        guard !Calendar.current.isDateInToday(dueDate) else { return false }
+        guard !Calendar.current.isDate(dueDate, inSameDayAs: now) else { return false }
         guard dueDate > now else { return false }
         let end = Calendar.current.date(byAdding: .day, value: withinDays, to: Calendar.current.startOfDay(for: now)) ?? now
         return dueDate < end

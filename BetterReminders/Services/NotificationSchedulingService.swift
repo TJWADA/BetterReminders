@@ -6,6 +6,11 @@ enum NotificationSchedulingService {
         "due-\(reminderID.uuidString)"
     }
 
+    static func shouldSchedule(for reminder: Reminder, at now: Date = Date()) -> Bool {
+        guard !reminder.isCompleted, let dueDate = reminder.dueDate else { return false }
+        return dueDate > now
+    }
+
     static func schedule(for reminder: Reminder) async {
         await cancel(for: reminder.id)
 

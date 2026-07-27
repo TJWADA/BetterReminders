@@ -46,6 +46,11 @@
 		A10000000000000000000027 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* OnboardingView.swift */; };
 		A10000000000000000000028 /* AudioPlaybackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000028 /* AudioPlaybackService.swift */; };
 		A10000000000000000000029 /* AudioPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* AudioPlaybackView.swift */; };
+		A1000000000000000000002A /* TestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* TestFixtures.swift */; };
+		A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* ReminderFiltersTests.swift */; };
+		A1000000000000000000002C /* ProcessingJobCleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* ProcessingJobCleanupServiceTests.swift */; };
+		A1000000000000000000002D /* ReminderParserServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* ReminderParserServiceTests.swift */; };
+		A1000000000000000000002E /* NotificationSchedulingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* NotificationSchedulingServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +60,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A30000000000000000000004;
 			remoteInfo = BetterRemindersWidgets;
+		};
+		A40000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A50000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A30000000000000000000003;
+			remoteInfo = BetterReminders;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -114,8 +126,14 @@
 		A20000000000000000000027 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A20000000000000000000028 /* AudioPlaybackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackService.swift; sourceTree = "<group>"; };
 		A20000000000000000000029 /* AudioPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackView.swift; sourceTree = "<group>"; };
+		A2000000000000000000002A /* TestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixtures.swift; sourceTree = "<group>"; };
+		A2000000000000000000002B /* ReminderFiltersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderFiltersTests.swift; sourceTree = "<group>"; };
+		A2000000000000000000002C /* ProcessingJobCleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingJobCleanupServiceTests.swift; sourceTree = "<group>"; };
+		A2000000000000000000002D /* ReminderParserServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParserServiceTests.swift; sourceTree = "<group>"; };
+		A2000000000000000000002E /* NotificationSchedulingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingServiceTests.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* BetterReminders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterReminders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* BetterRemindersWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BetterRemindersWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000000000000000000005 /* BetterRemindersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterRemindersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,6 +151,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A70000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -141,6 +166,7 @@
 			children = (
 				A80000000000000000000002 /* BetterReminders */,
 				A80000000000000000000003 /* BetterRemindersWidgets */,
+				A8000000000000000000000C /* BetterRemindersTests */,
 				A80000000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -177,6 +203,7 @@
 			children = (
 				A30000000000000000000001 /* BetterReminders.app */,
 				A30000000000000000000002 /* BetterRemindersWidgets.appex */,
+				A30000000000000000000005 /* BetterRemindersTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -265,6 +292,18 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
+		A8000000000000000000000C /* BetterRemindersTests */ = {
+			isa = PBXGroup;
+			children = (
+				A2000000000000000000002A /* TestFixtures.swift */,
+				A2000000000000000000002B /* ReminderFiltersTests.swift */,
+				A2000000000000000000002C /* ProcessingJobCleanupServiceTests.swift */,
+				A2000000000000000000002D /* ReminderParserServiceTests.swift */,
+				A2000000000000000000002E /* NotificationSchedulingServiceTests.swift */,
+			);
+			path = BetterRemindersTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -304,6 +343,23 @@
 			productReference = A30000000000000000000002 /* BetterRemindersWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		A30000000000000000000006 /* BetterRemindersTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000005 /* Build configuration list for PBXNativeTarget "BetterRemindersTests" */;
+			buildPhases = (
+				AA0000000000000000000007 /* Sources */,
+				A70000000000000000000003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA0000000000000000000006 /* PBXTargetDependency */,
+			);
+			name = BetterRemindersTests;
+			productName = BetterRemindersTests;
+			productReference = A30000000000000000000005 /* BetterRemindersTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -319,6 +375,10 @@
 					};
 					A30000000000000000000004 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					A30000000000000000000006 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = A30000000000000000000003;
 					};
 				};
 			};
@@ -337,6 +397,7 @@
 			targets = (
 				A30000000000000000000003 /* BetterReminders */,
 				A30000000000000000000004 /* BetterRemindersWidgets */,
+				A30000000000000000000006 /* BetterRemindersTests */,
 			);
 		};
 /* End PBXProject section */
@@ -411,6 +472,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA0000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000000000000000000002A /* TestFixtures.swift in Sources */,
+				A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */,
+				A1000000000000000000002C /* ProcessingJobCleanupServiceTests.swift in Sources */,
+				A1000000000000000000002D /* ReminderParserServiceTests.swift in Sources */,
+				A1000000000000000000002E /* NotificationSchedulingServiceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -418,6 +491,11 @@
 			isa = PBXTargetDependency;
 			target = A30000000000000000000004 /* BetterRemindersWidgets */;
 			targetProxy = A40000000000000000000001 /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000006 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A30000000000000000000003 /* BetterReminders */;
+			targetProxy = A40000000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -574,6 +652,44 @@
 			};
 			name = Release;
 		};
+		AB0000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 59T6929373;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.betterreminders.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BetterReminders.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BetterReminders";
+			};
+			name = Debug;
+		};
+		AB0000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 59T6929373;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.betterreminders.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BetterReminders.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BetterReminders";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -600,6 +716,15 @@
 			buildConfigurations = (
 				AB0000000000000000000005 /* Debug */,
 				AB0000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000005 /* Build configuration list for PBXNativeTarget "BetterRemindersTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0000000000000000000007 /* Debug */,
+				AB0000000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
