@@ -19,16 +19,24 @@ final class ReminderProcessingService {
         modelContext: ModelContext,
         retainAudio: Bool
     ) async {
+        guard !isProcessing else { return }
+
         isProcessing = true
         lastError = nil
         lastCreatedTitles = []
         currentStatus = .pending
+
+        ListSeeder.seedIfNeeded(modelContext: modelContext)
 
         let audioPath = audioURL.path
         let job = ProcessingJob(status: .pending, audioFilePath: audioPath)
         modelContext.insert(job)
 
         do {
+            guard FileManager.default.fileExists(atPath: audioPath) else {
+                throw ProcessingError.recordingFileMissing
+            }
+
             currentStatus = .transcribing
             job.status = .transcribing
             try modelContext.save()
@@ -43,17 +51,23 @@ final class ReminderProcessingService {
             let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
                 sortBy: [SortDescriptor(\.sortOrder)]
             ))
-            let listNames = lists.map(\.name)
+            guard !lists.isEmpty else {
+                throw ProcessingError.noListsAvailable
+            }
 
             let parsed = try await ReminderParserService.parse(
                 transcript: transcript,
-                listNames: listNames,
+                listNames: lists.map(\.name),
                 recentCorrections: AppSettings.shared.recentCorrections
             )
 
             for item in parsed.reminders {
                 let targetList = ListSeeder.findList(named: item.list, in: lists)
                     ?? ListSeeder.fallbackList(from: lists)
+
+                guard let targetList else {
+                    throw ProcessingError.noListsAvailable
+                }
 
                 let reminder = Reminder(
                     title: item.title,
@@ -67,13 +81,13 @@ final class ReminderProcessingService {
                 lastCreatedTitles.append(item.title)
             }
 
-            if !retainAudio {
-                try? FileManager.default.removeItem(at: audioURL)
-            }
-
             job.status = .done
             currentStatus = .done
             try modelContext.save()
+
+            if !retainAudio {
+                try? FileManager.default.removeItem(at: audioURL)
+            }
 
             await sendConfirmationNotification(titles: lastCreatedTitles)
         } catch {
@@ -87,13 +101,38 @@ final class ReminderProcessingService {
         isProcessing = false
     }
 
+    enum ProcessingError: LocalizedError {
+        case recordingFileMissing
+        case noListsAvailable
+
+        var errorDescription: String? {
+            switch self {
+            case .recordingFileMissing:
+                return "Recording file could not be found"
+            case .noListsAvailable:
+                return "No reminder lists available. Open the Lists tab once, then try again."
+            }
+        }
+    }
+
     @MainActor
     func retryJob(_ job: ProcessingJob, modelContext: ModelContext, retainAudio: Bool) async {
         guard let transcript = job.transcript, !transcript.isEmpty else {
             let url = URL(fileURLWithPath: job.audioFilePath)
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                job.status = .failed
+                job.errorMessage = ProcessingError.recordingFileMissing.localizedDescription
+                lastError = job.errorMessage
+                try? modelContext.save()
+                return
+            }
             await processRecording(audioURL: url, modelContext: modelContext, retainAudio: retainAudio)
             return
         }
+
+        guard !isProcessing else { return }
+
+        ListSeeder.seedIfNeeded(modelContext: modelContext)
 
         isProcessing = true
         lastError = nil
@@ -106,6 +145,10 @@ final class ReminderProcessingService {
             let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
                 sortBy: [SortDescriptor(\.sortOrder)]
             ))
+            guard !lists.isEmpty else {
+                throw ProcessingError.noListsAvailable
+            }
+
             let parsed = try await ReminderParserService.parse(
                 transcript: transcript,
                 listNames: lists.map(\.name),
@@ -115,6 +158,9 @@ final class ReminderProcessingService {
             for item in parsed.reminders {
                 let targetList = ListSeeder.findList(named: item.list, in: lists)
                     ?? ListSeeder.fallbackList(from: lists)
+                guard let targetList else {
+                    throw ProcessingError.noListsAvailable
+                }
                 let reminder = Reminder(
                     title: item.title,
                     rawTranscript: transcript,

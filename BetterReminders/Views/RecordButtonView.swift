@@ -93,28 +93,36 @@ struct RecordButtonView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             ForEach(jobs.prefix(3)) { job in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(job.transcript ?? "Voice memo")
-                            .font(.caption)
-                            .lineLimit(1)
-                        Text(job.createdAt.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    statusBadge(for: job.status)
-                    if job.status == .failed {
-                        Button("Retry") {
-                            Task {
-                                await processor.retryJob(
-                                    job,
-                                    modelContext: modelContext,
-                                    retainAudio: AppSettings.shared.retainAudio
-                                )
-                            }
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(job.transcript ?? "Voice memo")
+                                .font(.caption)
+                                .lineLimit(1)
+                            Text(job.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
                         }
-                        .font(.caption)
+                        Spacer()
+                        statusBadge(for: job.status)
+                        if job.status == .failed {
+                            Button("Retry") {
+                                Task {
+                                    await processor.retryJob(
+                                        job,
+                                        modelContext: modelContext,
+                                        retainAudio: AppSettings.shared.retainAudio
+                                    )
+                                }
+                            }
+                            .font(.caption)
+                        }
+                    }
+                    if job.status == .failed, let errorMessage = job.errorMessage, !errorMessage.isEmpty {
+                        Text(errorMessage)
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .padding(8)
@@ -164,6 +172,7 @@ struct RecordButtonView: View {
                 HapticHelper.impact(.medium)
                 guard let url = recorder.stopRecording() else { return }
                 stopElapsedTimer()
+                ListSeeder.seedIfNeeded(modelContext: modelContext)
                 await RecordingLiveActivityManager.showProcessing(message: "Processing…")
                 await processRecording(at: url)
                 await RecordingLiveActivityManager.end()
