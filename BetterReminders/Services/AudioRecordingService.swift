@@ -89,6 +89,15 @@ final class AudioRecordingService {
         return Date().timeIntervalSince(start)
     }
 
+    func currentAudioLevel() -> Double {
+        guard let recorder = audioRecorder, recorder.isRecording else { return 0 }
+        recorder.updateMeters()
+        let power = recorder.averagePower(forChannel: 0)
+        let minDb: Float = -60
+        let clamped = max(minDb, power)
+        return Double((clamped - minDb) / -minDb)
+    }
+
     func resetStaleSession() {
         if RecordingSessionStore.isSessionActive, audioRecorder == nil {
             RecordingSessionStore.markStopped()

@@ -7,8 +7,8 @@ struct RecordButtonView: View {
 
     @State private var recorder = AudioRecordingService.shared
     @State private var processor = ReminderProcessingService.shared
-    @State private var elapsedTimer: Timer?
-    @State private var elapsedSeconds = 0
+    @State private var displayTick = 0
+    @State private var displayTimer: Timer?
     @State private var permissionDenied = false
     @State private var showSuccess = false
     @State private var recordingError: String?
@@ -60,9 +60,10 @@ struct RecordButtonView: View {
             .padding(.top, 8)
 
             if recorder.isRecording {
-                Text(formattedElapsed(elapsedSeconds))
+                Text(formattedElapsed(Int(recorder.elapsedTime)))
                     .font(.title2.monospacedDigit())
                     .foregroundStyle(.secondary)
+                    .id(displayTick)
                 Text("Tap to stop recording")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -189,17 +190,17 @@ struct RecordButtonView: View {
             if recorder.isRecording {
                 HapticHelper.recordingStopped()
                 guard let url = recorder.stopRecording() else { return }
-                stopElapsedTimer()
                 ListSeeder.seedIfNeeded(modelContext: modelContext)
-                await RecordingLiveActivityManager.showProcessing(message: "Processing…")
+                await RecordingCoordinator.shared.stopMeterTimer()
+                stopDisplayTimer()
+                await RecordingLiveActivityManager.showTranscribing()
                 await processRecording(at: url)
-                await RecordingLiveActivityManager.end()
             } else {
                 HapticHelper.recordingStarted()
                 try await RecordingLiveActivityManager.start()
                 _ = try recorder.startRecording()
-                elapsedSeconds = 0
-                startElapsedTimer()
+                startDisplayTimer()
+                await RecordingCoordinator.shared.startMeterTimer()
             }
         } catch {
             recordingError = error.localizedDescription
@@ -211,7 +212,8 @@ struct RecordButtonView: View {
         await processor.processRecording(
             audioURL: url,
             modelContext: modelContext,
-            retainAudio: AppSettings.shared.retainAudio
+            retainAudio: AppSettings.shared.retainAudio,
+            updatesLiveActivity: true
         )
         if processor.currentStatus == .done {
             HapticHelper.notification(.success)
@@ -221,25 +223,22 @@ struct RecordButtonView: View {
         }
     }
 
-    private func startElapsedTimer() {
-        elapsedTimer?.invalidate()
-        elapsedTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            elapsedSeconds = Int(recorder.elapsedTime)
-            Task {
-                await RecordingLiveActivityManager.update(elapsedSeconds: elapsedSeconds)
-            }
-        }
-    }
-
-    private func stopElapsedTimer() {
-        elapsedTimer?.invalidate()
-        elapsedTimer = nil
-    }
-
     private func formattedElapsed(_ seconds: Int) -> String {
         let mins = seconds / 60
         let secs = seconds % 60
         return String(format: "%d:%02d", mins, secs)
+    }
+
+    private func startDisplayTimer() {
+        displayTimer?.invalidate()
+        displayTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            displayTick += 1
+        }
+    }
+
+    private func stopDisplayTimer() {
+        displayTimer?.invalidate()
+        displayTimer = nil
     }
 }
 

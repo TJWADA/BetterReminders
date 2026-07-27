@@ -13,5 +13,9 @@
 		<string>audio</string>
 		<string>processing</string>
 	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.betterreminders.app.processRecording</string>
+	</array>
 </dict>
 </plist>

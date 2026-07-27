@@ -1,62 +1,60 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
 struct RecordingLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RecordingActivityAttributes.self) { context in
-            HStack(spacing: 12) {
-                Image(systemName: context.state.isRecording ? "mic.fill" : "waveform")
-                    .foregroundStyle(context.state.isRecording ? .red : .blue)
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(context.state.statusMessage)
-                        .font(.headline)
-                    if context.state.isRecording {
-                        Text(formatElapsed(context.state.elapsedSeconds))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
-            }
-            .padding()
-            .activityBackgroundTint(Color.black.opacity(0.8))
+            RecordingLiveActivityViews.lockScreenContent(context: context)
+                .activityBackgroundTint(Color.black.opacity(0.85))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Image(systemName: "mic.fill")
-                        .foregroundStyle(.red)
+                    RecordingLiveActivityViews.phaseIcon(context: context, size: .title3)
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    Text(context.state.statusMessage)
-                        .font(.caption)
+                    VStack(spacing: 2) {
+                        Text(context.state.statusMessage)
+                            .font(.caption)
+                            .lineLimit(2)
+                        RecordingLiveActivityViews.phaseSubtitle(context: context)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    if context.state.isRecording {
-                        Text(formatElapsed(context.state.elapsedSeconds))
-                            .font(.caption.monospacedDigit())
+                    RecordingLiveActivityViews.compactTrailing(context: context)
+                }
+                DynamicIslandExpandedRegion(.bottom) {
+            if context.state.phase == .recording {
+                Button(intent: StopRecordingWidgetIntent()) {
+                            Label("Stop Recording", systemImage: "stop.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
+                    } else if context.state.phase == .completed,
+                              let title = context.state.resultTitle {
+                        VStack(spacing: 4) {
+                            Text(title)
+                                .font(.caption.bold())
+                            if let listName = context.state.resultListName {
+                                ListResultBadge(
+                                    name: listName,
+                                    icon: context.state.resultListIcon ?? "folder.fill"
+                                )
+                            }
+                        }
                     }
                 }
             } compactLeading: {
-                Image(systemName: "mic.fill")
-                    .foregroundStyle(.red)
+                RecordingLiveActivityViews.phaseIcon(context: context, size: .caption)
             } compactTrailing: {
-                if context.state.isRecording {
-                    Text(formatElapsed(context.state.elapsedSeconds))
-                        .font(.caption2.monospacedDigit())
-                }
+                RecordingLiveActivityViews.compactTrailing(context: context)
             } minimal: {
-                Image(systemName: "mic.fill")
-                    .foregroundStyle(.red)
+                Image(systemName: context.state.phase == .completed ? "checkmark" : "mic.fill")
+                    .foregroundStyle(context.state.phase == .completed ? .green : .red)
             }
         }
-    }
-
-    private func formatElapsed(_ seconds: Int) -> String {
-        let mins = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%d:%02d", mins, secs)
     }
 }
 

@@ -17,7 +17,8 @@ final class ReminderProcessingService {
     func processRecording(
         audioURL: URL,
         modelContext: ModelContext,
-        retainAudio: Bool
+        retainAudio: Bool,
+        updatesLiveActivity: Bool = true
     ) async {
         guard !isProcessing else { return }
 
@@ -32,6 +33,10 @@ final class ReminderProcessingService {
         let job = ProcessingJob(status: .pending, audioFilePath: audioPath)
         modelContext.insert(job)
 
+        var firstResultTitle: String?
+        var firstResultListName: String?
+        var firstResultListIcon: String?
+
         do {
             guard FileManager.default.fileExists(atPath: audioPath) else {
                 throw ProcessingError.recordingFileMissing
@@ -40,6 +45,9 @@ final class ReminderProcessingService {
             currentStatus = .transcribing
             job.status = .transcribing
             try modelContext.save()
+            if updatesLiveActivity {
+                await RecordingLiveActivityManager.showTranscribing()
+            }
 
             let transcript = try await SpeechService.transcribe(audioURL: audioURL)
             job.transcript = transcript
@@ -47,6 +55,9 @@ final class ReminderProcessingService {
             currentStatus = .parsing
             job.status = .parsing
             try modelContext.save()
+            if updatesLiveActivity {
+                await RecordingLiveActivityManager.showParsing()
+            }
 
             let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
                 sortBy: [SortDescriptor(\.sortOrder)]
@@ -80,6 +91,12 @@ final class ReminderProcessingService {
                 modelContext.insert(reminder)
                 lastCreatedTitles.append(item.title)
                 await NotificationSchedulingService.schedule(for: reminder)
+
+                if firstResultTitle == nil {
+                    firstResultTitle = item.title
+                    firstResultListName = targetList.name
+                    firstResultListIcon = targetList.icon
+                }
             }
 
             job.status = .done
@@ -92,6 +109,17 @@ final class ReminderProcessingService {
                 try? FileManager.default.removeItem(at: audioURL)
             }
 
+            if updatesLiveActivity,
+               let firstResultTitle,
+               let firstResultListName,
+               let firstResultListIcon {
+                await RecordingLiveActivityManager.showCompleted(
+                    title: firstResultTitle,
+                    listName: firstResultListName,
+                    listIcon: firstResultListIcon
+                )
+            }
+
             await sendConfirmationNotification(titles: lastCreatedTitles)
         } catch {
             job.status = .failed
@@ -99,6 +127,10 @@ final class ReminderProcessingService {
             currentStatus = .failed
             lastError = error.localizedDescription
             try? modelContext.save()
+
+            if updatesLiveActivity {
+                await RecordingLiveActivityManager.showFailed(message: error.localizedDescription)
+            }
         }
 
         isProcessing = false
@@ -129,7 +161,12 @@ final class ReminderProcessingService {
                 try? modelContext.save()
                 return
             }
-            await processRecording(audioURL: url, modelContext: modelContext, retainAudio: retainAudio)
+            await processRecording(
+                audioURL: url,
+                modelContext: modelContext,
+                retainAudio: retainAudio,
+                updatesLiveActivity: false
+            )
             return
         }
 
