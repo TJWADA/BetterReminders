@@ -86,8 +86,7 @@ enum ReminderParserService {
             throw ParserError.invalidResponse
         }
         guard (200...299).contains(http.statusCode) else {
-            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw ParserError.apiError(statusCode: http.statusCode, message: message)
+            throw ParserError.apiError(statusCode: http.statusCode, message: parseAPIErrorMessage(from: data))
         }
 
         let completion = try JSONDecoder().decode(OpenAICompletion.self, from: data)
@@ -96,6 +95,34 @@ enum ReminderParserService {
         }
 
         return try parseResponseContent(content)
+    }
+
+    static func validateAPIKey() async throws {
+        guard let apiKey = KeychainHelper.loadAPIKey(), !apiKey.isEmpty else {
+            throw ParserError.missingAPIKey
+        }
+
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/models")!)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 30
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw ParserError.invalidResponse
+        }
+        guard (200...299).contains(http.statusCode) else {
+            throw ParserError.apiError(statusCode: http.statusCode, message: parseAPIErrorMessage(from: data))
+        }
+    }
+
+    private static func parseAPIErrorMessage(from data: Data) -> String {
+        if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let error = object["error"] as? [String: Any],
+           let message = error["message"] as? String {
+            return message
+        }
+        return String(data: data, encoding: .utf8) ?? "Unknown error"
     }
 
     private static func parseResponseContent(_ content: String) throws -> ParsedReminderResponse {
@@ -202,7 +229,13 @@ enum ReminderParserService {
             case .noRemindersFound:
                 return "AI could not extract any reminders from the recording"
             case .apiError(let code, let message):
-                return "AI service error (\(code)): \(message)"
+                if code == 401 {
+                    return "Invalid OpenAI API key. Create a new key at platform.openai.com/api-keys and save it in Settings."
+                }
+                if code == 429 {
+                    return "OpenAI rate limit or quota exceeded. Check billing at platform.openai.com."
+                }
+                return "OpenAI error (\(code)): \(message)"
             }
         }
     }

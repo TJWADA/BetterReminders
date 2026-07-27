@@ -6,6 +6,8 @@ struct SettingsView: View {
     @State private var apiKey = KeychainHelper.loadAPIKey() ?? ""
     @State private var showSavedConfirmation = false
     @State private var saveError: String?
+    @State private var testResult: String?
+    @State private var isTestingKey = false
 
     var body: some View {
         NavigationStack {
@@ -18,6 +20,11 @@ struct SettingsView: View {
                     Button("Save API Key") {
                         saveAPIKey()
                     }
+                    Button(isTestingKey ? "Testing…" : "Test API Key") {
+                        Task { await testAPIKey() }
+                    }
+                    .disabled(isTestingKey || apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
                     if showSavedConfirmation {
                         Label("API key saved securely", systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
@@ -28,9 +35,16 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.red)
                     }
-                    Text("Your key is stored in the Keychain and used to categorize reminders via OpenAI.")
+                    if let testResult {
+                        Text(testResult)
+                            .font(.caption)
+                            .foregroundStyle(testResult.contains("valid") ? .green : .red)
+                    }
+                    Text("Get your key from platform.openai.com/api-keys. This is not your ChatGPT login — you need a separate API key.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Link("Open OpenAI API Keys", destination: URL(string: "https://platform.openai.com/api-keys")!)
+                        .font(.caption)
                 }
 
                 Section("Recording") {
@@ -78,20 +92,49 @@ struct SettingsView: View {
 
     private func saveAPIKey() {
         saveError = nil
+        testResult = nil
         showSavedConfirmation = false
-        let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = KeychainHelper.sanitizeAPIKey(apiKey)
         guard !trimmed.isEmpty else {
             saveError = "API key cannot be empty"
             return
         }
         do {
             try KeychainHelper.saveAPIKey(trimmed)
+            apiKey = trimmed
             showSavedConfirmation = true
             HapticHelper.notification(.success)
         } catch {
             saveError = error.localizedDescription
             HapticHelper.notification(.error)
         }
+    }
+
+    private func testAPIKey() async {
+        isTestingKey = true
+        testResult = nil
+        saveError = nil
+
+        let trimmed = KeychainHelper.sanitizeAPIKey(apiKey)
+        guard KeychainHelper.isValidOpenAIKeyFormat(trimmed) else {
+            testResult = "Invalid key format. Keys should start with sk-."
+            isTestingKey = false
+            return
+        }
+
+        do {
+            try KeychainHelper.saveAPIKey(trimmed)
+            apiKey = trimmed
+            try await ReminderParserService.validateAPIKey()
+            testResult = "API key is valid."
+            showSavedConfirmation = true
+            HapticHelper.notification(.success)
+        } catch {
+            testResult = error.localizedDescription
+            HapticHelper.notification(.error)
+        }
+
+        isTestingKey = false
     }
 }
 
