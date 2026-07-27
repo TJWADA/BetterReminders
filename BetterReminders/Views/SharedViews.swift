@@ -32,3 +32,27 @@ struct ListColorBadge: View {
         }
     }
 }
+
+struct SetupStepRow: View {
+    let number: Int
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text("\(number)")
+                .font(.caption.bold())
+                .frame(width: 24, height: 24)
+                .background(Color.accentColor.opacity(0.15), in: Circle())
+                .foregroundStyle(Color.accentColor)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}

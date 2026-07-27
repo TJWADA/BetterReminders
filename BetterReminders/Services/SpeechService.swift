@@ -2,6 +2,10 @@ import Foundation
 import Speech
 
 enum SpeechService {
+    static var authorizationStatus: SFSpeechRecognizerAuthorizationStatus {
+        SFSpeechRecognizer.authorizationStatus()
+    }
+
     static func requestAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
         await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in

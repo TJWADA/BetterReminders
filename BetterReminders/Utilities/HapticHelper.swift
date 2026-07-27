@@ -12,4 +12,18 @@ enum HapticHelper {
     static func selection() {
         UISelectionFeedbackGenerator().selectionChanged()
     }
+
+    static func recordingStarted() {
+        impact(.heavy)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            impact(.rigid)
+        }
+    }
+
+    static func recordingStopped() {
+        impact(.medium)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            notification(.success)
+        }
+    }
 }

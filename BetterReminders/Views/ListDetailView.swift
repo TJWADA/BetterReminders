@@ -4,15 +4,33 @@ import SwiftData
 struct ListDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var list: ReminderList
+    @State private var settings = AppSettings.shared
     @State private var showingAddReminder = false
     @State private var newTitle = ""
+    @State private var searchText = ""
+    @State private var priorityFilter: PriorityFilter = .all
 
     private var sortedReminders: [Reminder] {
-        list.reminders.sorted { lhs, rhs in
+        let filtered = ReminderFilters.apply(
+            to: list.reminders,
+            searchText: searchText,
+            hideCompleted: settings.hideCompleted,
+            priorityFilter: priorityFilter
+        )
+        return filtered.sorted { lhs, rhs in
             if lhs.isCompleted != rhs.isCompleted {
                 return !lhs.isCompleted
             }
-            return lhs.createdAt > rhs.createdAt
+            switch (lhs.dueDate, rhs.dueDate) {
+            case let (l?, r?):
+                return l < r
+            case (nil, _?):
+                return false
+            case (_?, nil):
+                return true
+            case (nil, nil):
+                return lhs.createdAt > rhs.createdAt
+            }
         }
     }
 
@@ -20,9 +38,11 @@ struct ListDetailView: View {
         List {
             if sortedReminders.isEmpty {
                 ContentUnavailableView(
-                    "No Reminders",
-                    systemImage: "checkmark.circle",
-                    description: Text("Record a voice memo to add reminders to this list.")
+                    searchText.isEmpty ? "No Reminders" : "No Results",
+                    systemImage: searchText.isEmpty ? "checkmark.circle" : "magnifyingglass",
+                    description: Text(searchText.isEmpty
+                        ? "Record a voice memo to add reminders to this list."
+                        : "Try a different search or filter.")
                 )
             } else {
                 ForEach(sortedReminders) { reminder in
@@ -36,7 +56,20 @@ struct ListDetailView: View {
             }
         }
         .navigationTitle(list.name)
+        .searchable(text: $searchText, prompt: "Search in \(list.name)")
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Toggle("Hide Completed", isOn: $settings.hideCompleted)
+                    Picker("Priority", selection: $priorityFilter) {
+                        ForEach(PriorityFilter.allCases) { filter in
+                            Text(filter.label).tag(filter)
+                        }
+                    }
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showingAddReminder = true
@@ -63,7 +96,9 @@ struct ListDetailView: View {
 
     private func deleteReminders(at offsets: IndexSet) {
         for index in offsets {
-            modelContext.delete(sortedReminders[index])
+            let reminder = sortedReminders[index]
+            Task { await NotificationSchedulingService.cancel(for: reminder.id) }
+            modelContext.delete(reminder)
         }
         try? modelContext.save()
     }
@@ -71,12 +106,20 @@ struct ListDetailView: View {
 
 struct ReminderRowView: View {
     @Bindable var reminder: Reminder
+    var showDueDate: Bool = true
 
     var body: some View {
         HStack(spacing: 12) {
             Button {
                 reminder.isCompleted.toggle()
                 HapticHelper.selection()
+                Task {
+                    if reminder.isCompleted {
+                        await NotificationSchedulingService.cancel(for: reminder.id)
+                    } else {
+                        await NotificationSchedulingService.schedule(for: reminder)
+                    }
+                }
             } label: {
                 Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(reminder.isCompleted ? .green : .secondary)
@@ -88,10 +131,10 @@ struct ReminderRowView: View {
                 Text(reminder.title)
                     .strikethrough(reminder.isCompleted)
                     .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
-                if let dueDate = reminder.dueDate {
+                if showDueDate, let dueDate = reminder.dueDate {
                     Text(dueDate.formatted(date: .abbreviated, time: .shortened))
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(ReminderFilters.isOverdue(reminder) ? .red : .secondary)
                 }
             }
         }

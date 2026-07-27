@@ -8,6 +8,8 @@ final class AppSettings {
         static let retainAudio = "retainAudio"
         static let hasSeededLists = "hasSeededLists"
         static let recentCorrections = "recentCorrections"
+        static let hasCompletedOnboarding = "hasCompletedOnboarding"
+        static let hideCompleted = "hideCompleted"
     }
 
     var retainAudio: Bool {
@@ -23,6 +25,16 @@ final class AppSettings {
     var recentCorrections: [String] {
         get { UserDefaults.standard.stringArray(forKey: Keys.recentCorrections) ?? [] }
         set { UserDefaults.standard.set(newValue, forKey: Keys.recentCorrections) }
+    }
+
+    var hasCompletedOnboarding: Bool {
+        get { UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding) }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.hasCompletedOnboarding) }
+    }
+
+    var hideCompleted: Bool {
+        get { UserDefaults.standard.bool(forKey: Keys.hideCompleted) }
+        set { UserDefaults.standard.set(newValue, forKey: Keys.hideCompleted) }
     }
 
     func recordCorrection(from oldList: String, to newList: String, reminderTitle: String) {

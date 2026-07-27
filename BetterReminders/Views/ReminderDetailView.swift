@@ -7,6 +7,12 @@ struct ReminderDetailView: View {
     @Query(sort: \ReminderList.sortOrder) private var allLists: [ReminderList]
     @Bindable var reminder: Reminder
     @State private var showingDeleteConfirm = false
+    @State private var hasDueDate: Bool
+
+    init(reminder: Reminder) {
+        self.reminder = reminder
+        _hasDueDate = State(initialValue: reminder.dueDate != nil)
+    }
 
     var body: some View {
         Form {
@@ -14,14 +20,36 @@ struct ReminderDetailView: View {
                 TextField("Title", text: $reminder.title, axis: .vertical)
                     .lineLimit(2...4)
                 Toggle("Completed", isOn: $reminder.isCompleted)
-                DatePicker(
-                    "Due Date",
-                    selection: Binding(
-                        get: { reminder.dueDate ?? Date() },
-                        set: { reminder.dueDate = $0 }
-                    ),
-                    displayedComponents: [.date, .hourAndMinute]
-                )
+                    .onChange(of: reminder.isCompleted) { _, isCompleted in
+                        Task {
+                            if isCompleted {
+                                await NotificationSchedulingService.cancel(for: reminder.id)
+                            } else {
+                                await NotificationSchedulingService.schedule(for: reminder)
+                            }
+                        }
+                    }
+                Toggle("Due Date", isOn: $hasDueDate)
+                    .onChange(of: hasDueDate) { _, enabled in
+                        if enabled {
+                            if reminder.dueDate == nil {
+                                reminder.dueDate = Date()
+                            }
+                        } else {
+                            reminder.dueDate = nil
+                            Task { await NotificationSchedulingService.cancel(for: reminder.id) }
+                        }
+                    }
+                if hasDueDate {
+                    DatePicker(
+                        "When",
+                        selection: Binding(
+                            get: { reminder.dueDate ?? Date() },
+                            set: { reminder.dueDate = $0 }
+                        ),
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                }
                 Picker("Priority", selection: $reminder.priority) {
                     Text("None").tag(0)
                     Text("Low").tag(1)
@@ -53,6 +81,12 @@ struct ReminderDetailView: View {
                 }
             }
 
+            if let audioPath = reminder.audioFilePath, !audioPath.isEmpty {
+                Section("Original Recording") {
+                    AudioPlaybackView(audioPath: audioPath)
+                }
+            }
+
             if !reminder.rawTranscript.isEmpty {
                 Section("Original Transcript") {
                     Text(reminder.rawTranscript)
@@ -71,9 +105,11 @@ struct ReminderDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onDisappear {
             try? modelContext.save()
+            Task { await NotificationSchedulingService.schedule(for: reminder) }
         }
         .confirmationDialog("Delete this reminder?", isPresented: $showingDeleteConfirm, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
+                Task { await NotificationSchedulingService.cancel(for: reminder.id) }
                 modelContext.delete(reminder)
                 try? modelContext.save()
                 dismiss()

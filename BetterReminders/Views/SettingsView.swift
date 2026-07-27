@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var saveError: String?
     @State private var testResult: String?
     @State private var isTestingKey = false
+    @State private var showingOnboarding = false
 
     var body: some View {
         NavigationStack {
@@ -84,9 +85,15 @@ struct SettingsView: View {
                 Section("About") {
                     LabeledContent("Version", value: "1.0.0")
                     LabeledContent("Requires", value: "iOS 18+")
+                    Button("Show Setup Guide") {
+                        showingOnboarding = true
+                    }
                 }
             }
             .navigationTitle("Settings")
+            .fullScreenCover(isPresented: $showingOnboarding) {
+                OnboardingView()
+            }
         }
     }
 

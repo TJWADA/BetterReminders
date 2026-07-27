@@ -187,7 +187,7 @@ struct RecordButtonView: View {
 
         do {
             if recorder.isRecording {
-                HapticHelper.impact(.medium)
+                HapticHelper.recordingStopped()
                 guard let url = recorder.stopRecording() else { return }
                 stopElapsedTimer()
                 ListSeeder.seedIfNeeded(modelContext: modelContext)
@@ -195,11 +195,11 @@ struct RecordButtonView: View {
                 await processRecording(at: url)
                 await RecordingLiveActivityManager.end()
             } else {
-                HapticHelper.impact(.light)
+                HapticHelper.recordingStarted()
+                try await RecordingLiveActivityManager.start()
                 _ = try recorder.startRecording()
                 elapsedSeconds = 0
                 startElapsedTimer()
-                await RecordingLiveActivityManager.start()
             }
         } catch {
             recordingError = error.localizedDescription

@@ -23,44 +23,26 @@ struct ActionButtonSetupView: View {
             }
 
             Section("How It Works") {
-                Label("Press Action Button to start recording", systemImage: "1.circle.fill")
+                Label("Press Action Button — BetterReminders opens and recording starts", systemImage: "1.circle.fill")
                 Label("Speak your reminder naturally", systemImage: "2.circle.fill")
-                Label("Press Action Button again to stop", systemImage: "3.circle.fill")
-                Label("Reminder is transcribed and sorted automatically", systemImage: "4.circle.fill")
+                Label("You can leave the app; recording continues on Dynamic Island", systemImage: "3.circle.fill")
+                Label("Press Action Button again to stop and process", systemImage: "4.circle.fill")
             }
 
             Section("Note") {
-                Text("A Live Activity will appear on your Dynamic Island while recording. iOS requires this to keep recording active in the background.")
+                Text("iOS requires BetterReminders to open briefly when starting a recording so the Live Activity can activate. After that, you can switch apps or lock your phone while recording continues.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("If you see \"Toggle activation failed\"") {
+                Label("Enable Live Activities: Settings → BetterReminders → Live Activities", systemImage: "checkmark.circle")
+                Label("Grant Microphone access in BetterReminders first (use in-app Record once)", systemImage: "checkmark.circle")
+                Label("Re-select Toggle Recording in Settings → Action Button", systemImage: "checkmark.circle")
             }
         }
         .navigationTitle("Action Button Setup")
         .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-private struct SetupStepRow: View {
-    let number: Int
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(number)")
-                .font(.caption.bold())
-                .frame(width: 24, height: 24)
-                .background(Color.accentColor.opacity(0.15), in: Circle())
-                .foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 4)
     }
 }
 

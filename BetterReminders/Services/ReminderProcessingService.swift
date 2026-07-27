@@ -79,11 +79,14 @@ final class ReminderProcessingService {
                 )
                 modelContext.insert(reminder)
                 lastCreatedTitles.append(item.title)
+                await NotificationSchedulingService.schedule(for: reminder)
             }
 
             job.status = .done
             currentStatus = .done
             try modelContext.save()
+
+            ProcessingJobCleanupService.cleanup(modelContext: modelContext)
 
             if !retainAudio {
                 try? FileManager.default.removeItem(at: audioURL)
@@ -171,11 +174,13 @@ final class ReminderProcessingService {
                 )
                 modelContext.insert(reminder)
                 lastCreatedTitles.append(item.title)
+                await NotificationSchedulingService.schedule(for: reminder)
             }
 
             job.status = .done
             currentStatus = .done
             try modelContext.save()
+            ProcessingJobCleanupService.cleanup(modelContext: modelContext)
             await sendConfirmationNotification(titles: lastCreatedTitles)
         } catch {
             job.status = .failed

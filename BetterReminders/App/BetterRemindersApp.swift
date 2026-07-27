@@ -22,6 +22,7 @@ struct BetterRemindersApp: App {
                     Task {
                         await requestNotificationPermission()
                         ListSeeder.seedIfNeeded(modelContext: modelContainer.mainContext)
+                        await syncNotificationsAndCleanup()
                         await processPendingRecordings()
                     }
                 }
@@ -33,6 +34,7 @@ struct BetterRemindersApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         Task {
+                            await syncNotificationsAndCleanup()
                             await processPendingRecordings()
                         }
                     }
@@ -47,6 +49,14 @@ struct BetterRemindersApp: App {
     }
 
     @MainActor
+    private func syncNotificationsAndCleanup() async {
+        ProcessingJobCleanupService.cleanup(modelContext: modelContainer.mainContext)
+        if let reminders = try? modelContainer.mainContext.fetch(FetchDescriptor<Reminder>()) {
+            await NotificationSchedulingService.rescheduleAll(reminders: reminders)
+        }
+    }
+
+    @MainActor
     private func processPendingRecordings() async {
         while let url = PendingRecordingStore.dequeue() {
             await ReminderProcessingService.shared.processRecording(
@@ -55,5 +65,6 @@ struct BetterRemindersApp: App {
                 retainAudio: AppSettings.shared.retainAudio
             )
         }
+        ProcessingJobCleanupService.cleanup(modelContext: modelContainer.mainContext)
     }
 }

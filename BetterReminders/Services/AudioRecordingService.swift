@@ -5,13 +5,17 @@ import Foundation
 final class AudioRecordingService {
     static let shared = AudioRecordingService()
 
-    private(set) var isRecording = false
     private(set) var recordingStartDate: Date?
     private(set) var currentRecordingURL: URL?
 
     private var audioRecorder: AVAudioRecorder?
 
     private init() {}
+
+    /// True if the recorder is running or a persisted Action Button session is active.
+    var isRecording: Bool {
+        (audioRecorder?.isRecording == true) || RecordingSessionStore.isSessionActive
+    }
 
     var hasMicrophonePermission: Bool {
         AVAudioApplication.shared.recordPermission == .granted
@@ -30,9 +34,7 @@ final class AudioRecordingService {
             throw RecordingError.alreadyRecording
         }
 
-        let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
-        try session.setActive(true)
+        try configureAudioSession()
 
         let url = Self.makeRecordingURL()
         let settings: [String: Any] = [
@@ -44,41 +46,63 @@ final class AudioRecordingService {
 
         audioRecorder = try AVAudioRecorder(url: url, settings: settings)
         audioRecorder?.isMeteringEnabled = true
+        audioRecorder?.prepareToRecord()
         guard audioRecorder?.record() == true else {
             throw RecordingError.failedToStart
         }
 
-        isRecording = true
         recordingStartDate = Date()
         currentRecordingURL = url
+        RecordingSessionStore.markStarted(path: url.path)
         return url
     }
 
     @discardableResult
     func stopRecording() -> URL? {
-        guard isRecording else { return nil }
-        audioRecorder?.stop()
-        audioRecorder = nil
-        isRecording = false
-        recordingStartDate = nil
-        let url = currentRecordingURL
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        return url
-    }
-
-    func toggleRecording() throws -> (started: Bool, url: URL?) {
-        if isRecording {
-            let url = stopRecording()
-            return (false, url)
-        } else {
-            let url = try startRecording()
-            return (true, url)
+        if let recorder = audioRecorder, recorder.isRecording {
+            recorder.stop()
+            audioRecorder = nil
+            recordingStartDate = nil
+            let url = currentRecordingURL
+            currentRecordingURL = nil
+            RecordingSessionStore.markStopped()
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            return url
         }
+
+        // Recover when Action Button stop runs in a new intent invocation without a live recorder.
+        if RecordingSessionStore.isSessionActive,
+           let path = RecordingSessionStore.activeRecordingPath {
+            RecordingSessionStore.markStopped()
+            audioRecorder = nil
+            recordingStartDate = nil
+            currentRecordingURL = nil
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            return URL(fileURLWithPath: path)
+        }
+
+        return nil
     }
 
     var elapsedTime: TimeInterval {
         guard let start = recordingStartDate else { return 0 }
         return Date().timeIntervalSince(start)
+    }
+
+    func resetStaleSession() {
+        if RecordingSessionStore.isSessionActive, audioRecorder == nil {
+            RecordingSessionStore.markStopped()
+        }
+    }
+
+    private func configureAudioSession() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(
+            .playAndRecord,
+            mode: .spokenAudio,
+            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP]
+        )
+        try session.setActive(true)
     }
 
     private static func makeRecordingURL() -> URL {

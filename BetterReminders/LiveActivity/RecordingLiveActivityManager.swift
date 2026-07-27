@@ -1,11 +1,28 @@
 import ActivityKit
 import Foundation
 
+enum RecordingLiveActivityError: LocalizedError {
+    case disabled
+    case failed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .disabled:
+            return "Live Activities are turned off. Enable them in Settings → BetterReminders → Live Activities."
+        case .failed(let message):
+            return "Could not start recording indicator: \(message)"
+        }
+    }
+}
+
 enum RecordingLiveActivityManager {
     private static var currentActivity: Activity<RecordingActivityAttributes>?
 
-    static func start(sessionID: String = UUID().uuidString) async {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+    @discardableResult
+    static func start(sessionID: String = UUID().uuidString) async throws -> Bool {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            throw RecordingLiveActivityError.disabled
+        }
         await end()
 
         let attributes = RecordingActivityAttributes(sessionID: sessionID)
@@ -21,8 +38,9 @@ enum RecordingLiveActivityManager {
                 content: .init(state: state, staleDate: nil),
                 pushType: nil
             )
+            return currentActivity != nil
         } catch {
-            print("Failed to start Live Activity: \(error)")
+            throw RecordingLiveActivityError.failed(error.localizedDescription)
         }
     }
 
