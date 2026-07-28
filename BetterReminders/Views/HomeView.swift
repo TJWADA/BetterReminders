@@ -36,6 +36,7 @@ struct HomeView: View {
 
     @State private var safeAreaTop: CGFloat = 59
     @State private var safeAreaBottom: CGFloat = 34
+    @State private var geometryChangeCount = 0
 
     private let cornerPadding: CGFloat = 20
 
@@ -75,10 +76,34 @@ struct HomeView: View {
                 }
             }
             .onGeometryChange(for: EdgeInsets.self, of: { $0.safeAreaInsets }) { insets in
-                if insets.top != safeAreaTop {
+                geometryChangeCount += 1
+                let topWillChange = insets.top != safeAreaTop
+                let bottomWillChange = insets.bottom != safeAreaBottom
+                // #region agent log
+                if geometryChangeCount <= 20 || topWillChange || bottomWillChange {
+                    DebugSessionLog.write(
+                        location: "HomeView.swift:onGeometryChange",
+                        message: "Safe area geometry callback",
+                        hypothesisId: "H3",
+                        data: [
+                            "count": geometryChangeCount,
+                            "top": insets.top,
+                            "bottom": insets.bottom,
+                            "stateTop": safeAreaTop,
+                            "stateBottom": safeAreaBottom,
+                            "topWillChange": topWillChange,
+                            "bottomWillChange": bottomWillChange,
+                            "recording": recorder.isRecording,
+                            "searchOpen": showingTaskSearch,
+                            "navDepth": navigationPath.count,
+                        ]
+                    )
+                }
+                // #endregion
+                if topWillChange {
                     safeAreaTop = insets.top
                 }
-                if insets.bottom != safeAreaBottom {
+                if bottomWillChange {
                     safeAreaBottom = insets.bottom
                 }
             }

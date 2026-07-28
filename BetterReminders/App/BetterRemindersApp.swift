@@ -9,6 +9,13 @@ struct BetterRemindersApp: App {
     let modelContainer: ModelContainer
 
     init() {
+        // #region agent log
+        DebugSessionLog.write(
+            location: "BetterRemindersApp.swift:init",
+            message: "App init before RecordingSessionStore access",
+            hypothesisId: "H2"
+        )
+        // #endregion
         RecordingSessionStore.clearActionButtonState()
         do {
             modelContainer = try ModelContainer(for: Reminder.self, ReminderList.self, ProcessingJob.self)

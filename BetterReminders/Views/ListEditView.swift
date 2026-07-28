@@ -70,6 +70,14 @@ struct ListIconPickerRow: View {
                     Button {
                         icon = symbol
                         HapticHelper.selection()
+                        // #region agent log
+                        DebugSessionLog.write(
+                            location: "ListIconPickerRow.swift:iconTap",
+                            message: "Icon picker selection changed",
+                            hypothesisId: "H5",
+                            data: ["symbol": symbol, "compact": compact]
+                        )
+                        // #endregion
                     } label: {
                         Image(systemName: symbol)
                             .font(compact ? .body : .title2)
@@ -193,6 +201,16 @@ struct ListEditCompactView: View {
                 showingDeleteConfirm = true
             }
             .padding(.bottom, 8)
+        }
+        .onAppear {
+            // #region agent log
+            DebugSessionLog.write(
+                location: "ListEditCompactView.swift:onAppear",
+                message: "Compact edit sheet appeared",
+                hypothesisId: "H5",
+                data: ["icon": icon, "colorHex": colorHex]
+            )
+            // #endregion
         }
         .confirmationDialog(
             "Delete this list and all its reminders?",

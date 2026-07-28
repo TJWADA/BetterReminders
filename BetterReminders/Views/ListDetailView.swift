@@ -26,6 +26,7 @@ struct ListDetailView: View {
     @Namespace private var searchNamespace
 
     @State private var safeAreaBottom: CGFloat = 34
+    @State private var geometryChangeCount = 0
 
     private let fadeExtension: CGFloat = 48
 
@@ -82,7 +83,26 @@ struct ListDetailView: View {
             bottomActionBar
         }
         .onGeometryChange(for: EdgeInsets.self, of: { $0.safeAreaInsets }) { insets in
-            if insets.bottom != safeAreaBottom {
+            geometryChangeCount += 1
+            let bottomWillChange = insets.bottom != safeAreaBottom
+            // #region agent log
+            if geometryChangeCount <= 20 || bottomWillChange {
+                DebugSessionLog.write(
+                    location: "ListDetailView.swift:onGeometryChange",
+                    message: "Safe area geometry callback",
+                    hypothesisId: "H4",
+                    data: [
+                        "count": geometryChangeCount,
+                        "bottom": insets.bottom,
+                        "stateBottom": safeAreaBottom,
+                        "bottomWillChange": bottomWillChange,
+                        "recording": recorder.isRecording,
+                        "searchOpen": showingTaskSearch,
+                    ]
+                )
+            }
+            // #endregion
+            if bottomWillChange {
                 safeAreaBottom = insets.bottom
             }
         }

@@ -141,9 +141,24 @@ struct GlobalTaskSearchOverlay: View {
             }
         }
         .onAppear {
+            // #region agent log
+            DebugSessionLog.write(
+                location: "ExpandableOverlayViews.swift:searchOnAppear",
+                message: "Search overlay appeared, scheduling keyboard focus",
+                hypothesisId: "H6"
+            )
+            // #endregion
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(350))
                 searchFocused = true
+                // #region agent log
+                DebugSessionLog.write(
+                    location: "ExpandableOverlayViews.swift:searchFocus",
+                    message: "Search TextField focus set",
+                    hypothesisId: "H6",
+                    data: ["searchFocused": true]
+                )
+                // #endregion
             }
             withAnimation(.spring(response: 0.4, dampingFraction: 0.82).delay(0.12)) {
                 contentVisible = true
