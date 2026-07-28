@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import BetterRemindersCore
 
 struct RecordButtonView: View {
     @Environment(\.modelContext) private var modelContext
@@ -190,7 +191,6 @@ struct RecordButtonView: View {
             if recorder.isRecording {
                 HapticHelper.recordingStopped()
                 guard let url = recorder.stopRecording() else { return }
-                ListSeeder.seedIfNeeded(modelContext: modelContext)
                 await RecordingCoordinator.shared.stopMeterTimer()
                 stopDisplayTimer()
                 await RecordingLiveActivityManager.showTranscribing()

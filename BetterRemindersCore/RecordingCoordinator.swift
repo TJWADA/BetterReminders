@@ -1,15 +1,15 @@
 import Foundation
 
 @MainActor
-final class RecordingCoordinator {
-    static let shared = RecordingCoordinator()
+public final class RecordingCoordinator {
+    public static let shared = RecordingCoordinator()
 
     private var meterTimer: Timer?
     private var lowAudioTicks = 0
 
     private init() {}
 
-    func startMeterTimer() {
+    public func startMeterTimer() {
         meterTimer?.invalidate()
         lowAudioTicks = 0
         meterTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
@@ -22,13 +22,13 @@ final class RecordingCoordinator {
         }
     }
 
-    func stopMeterTimer() {
+    public func stopMeterTimer() {
         meterTimer?.invalidate()
         meterTimer = nil
         lowAudioTicks = 0
     }
 
-    func handleStoppedRecording(at url: URL) async {
+    public func handleStoppedRecording(at url: URL) async {
         NotificationCenter.default.post(
             name: .recordingDidFinish,
             object: nil,
@@ -63,6 +63,6 @@ final class RecordingCoordinator {
     }
 }
 
-extension Notification.Name {
+public extension Notification.Name {
     static let recordingDidFinish = Notification.Name("recordingDidFinish")
 }

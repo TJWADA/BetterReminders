@@ -1,14 +1,21 @@
 import AppIntents
 import Foundation
+import BetterRemindersCore
 
 struct ToggleRecordingIntent: AppIntent, AudioRecordingIntent {
     static var title: LocalizedStringResource = "Toggle Recording"
     static var description = IntentDescription("Start or stop recording a voice reminder.")
-    static var openAppWhenRun: Bool = false
+    /// Opens the app briefly so Live Activity can start reliably from the Action Button.
+    static var openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         let recorder = AudioRecordingService.shared
         recorder.resetStaleSession()
+
+        if recorder.isRecording {
+            try await RecordingStopHandler.stopIfRecording()
+            return .result()
+        }
 
         if !recorder.hasMicrophonePermission {
             let granted = await recorder.requestMicrophonePermission()
@@ -17,18 +24,16 @@ struct ToggleRecordingIntent: AppIntent, AudioRecordingIntent {
             }
         }
 
-        if recorder.isRecording {
-            try await RecordingStopHandler.stopIfRecording()
-        } else {
-            try await RecordingLiveActivityManager.start()
-            do {
-                HapticHelper.recordingStarted()
-                _ = try recorder.startRecording()
-            } catch {
-                await RecordingLiveActivityManager.endImmediate()
-                throw error
-            }
-            await RecordingCoordinator.shared.startMeterTimer()
+        if ActionButtonRecordingBootstrap.shouldDeferLiveActivityStart() {
+            ActionButtonRecordingBootstrap.markDeferredStart()
+            return .result()
+        }
+
+        do {
+            try await ActionButtonRecordingBootstrap.beginRecordingIfNeeded()
+        } catch is RecordingLiveActivityError {
+            ActionButtonRecordingBootstrap.markDeferredStart()
+            return .result()
         }
 
         return .result()

@@ -1,7 +1,7 @@
 import Foundation
 
-enum RecordingStopHandler {
-    static func stopIfRecording() async throws {
+public enum RecordingStopHandler {
+    public static func stopIfRecording() async throws {
         let recorder = AudioRecordingService.shared
         guard recorder.isRecording else { return }
 
@@ -25,7 +25,7 @@ enum RecordingStopHandler {
         await RecordingCoordinator.shared.handleStoppedRecording(at: url)
     }
 
-    static func recordingFileIsUsable(at url: URL) -> Bool {
+    public static func recordingFileIsUsable(at url: URL) -> Bool {
         guard FileManager.default.fileExists(atPath: url.path),
               let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
             return false
@@ -33,11 +33,11 @@ enum RecordingStopHandler {
         return size > 1024
     }
 
-    enum RecordingStopError: LocalizedError {
+    public enum RecordingStopError: LocalizedError {
         case stopFailed
         case recordingTooShort
 
-        var errorDescription: String? {
+        public var errorDescription: String? {
             switch self {
             case .stopFailed:
                 return "Could not stop recording. Open BetterReminders and try in-app Record once."

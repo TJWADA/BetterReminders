@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import BetterRemindersCore
 
 struct ListDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -17,21 +18,7 @@ struct ListDetailView: View {
             hideCompleted: settings.hideCompleted,
             priorityFilter: priorityFilter
         )
-        return filtered.sorted { lhs, rhs in
-            if lhs.isCompleted != rhs.isCompleted {
-                return !lhs.isCompleted
-            }
-            switch (lhs.dueDate, rhs.dueDate) {
-            case let (l?, r?):
-                return l < r
-            case (nil, _?):
-                return false
-            case (_?, nil):
-                return true
-            case (nil, nil):
-                return lhs.createdAt > rhs.createdAt
-            }
-        }
+        return ReminderFilters.sortForListView(filtered)
     }
 
     var body: some View {
@@ -59,16 +46,10 @@ struct ListDetailView: View {
         .searchable(text: $searchText, prompt: "Search in \(list.name)")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Toggle("Hide Completed", isOn: $settings.hideCompleted)
-                    Picker("Priority", selection: $priorityFilter) {
-                        ForEach(PriorityFilter.allCases) { filter in
-                            Text(filter.label).tag(filter)
-                        }
-                    }
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                }
+                ReminderFilterToolbar(
+                    hideCompleted: $settings.hideCompleted,
+                    priorityFilter: $priorityFilter
+                )
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -106,7 +87,6 @@ struct ListDetailView: View {
 
 struct ReminderRowView: View {
     @Bindable var reminder: Reminder
-    var showDueDate: Bool = true
 
     var body: some View {
         HStack(spacing: 12) {
@@ -114,11 +94,7 @@ struct ReminderRowView: View {
                 reminder.isCompleted.toggle()
                 HapticHelper.selection()
                 Task {
-                    if reminder.isCompleted {
-                        await NotificationSchedulingService.cancel(for: reminder.id)
-                    } else {
-                        await NotificationSchedulingService.schedule(for: reminder)
-                    }
+                    await reminder.updateNotificationForCompletion()
                 }
             } label: {
                 Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "circle")
@@ -131,7 +107,7 @@ struct ReminderRowView: View {
                 Text(reminder.title)
                     .strikethrough(reminder.isCompleted)
                     .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
-                if showDueDate, let dueDate = reminder.dueDate {
+                if let dueDate = reminder.dueDate {
                     Text(dueDate.formatted(date: .abbreviated, time: .shortened))
                         .font(.caption)
                         .foregroundStyle(ReminderFilters.isOverdue(reminder) ? .red : .secondary)

@@ -67,6 +67,24 @@ enum ReminderFilters {
         }
     }
 
+    static func sortForListView(_ reminders: [Reminder]) -> [Reminder] {
+        reminders.sorted { lhs, rhs in
+            if lhs.isCompleted != rhs.isCompleted {
+                return !lhs.isCompleted
+            }
+            switch (lhs.dueDate, rhs.dueDate) {
+            case let (l?, r?):
+                return l < r
+            case (nil, _?):
+                return false
+            case (_?, nil):
+                return true
+            case (nil, nil):
+                return lhs.createdAt > rhs.createdAt
+            }
+        }
+    }
+
     static func isOverdue(_ reminder: Reminder, now: Date = Date()) -> Bool {
         guard let dueDate = reminder.dueDate, !reminder.isCompleted else { return false }
         return dueDate < now

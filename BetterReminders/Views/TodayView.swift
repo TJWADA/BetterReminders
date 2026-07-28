@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct TodayView: View {
-    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Reminder.createdAt, order: .reverse) private var allReminders: [Reminder]
     @State private var settings = AppSettings.shared
     @State private var searchText = ""
@@ -83,16 +82,10 @@ struct TodayView: View {
             .searchable(text: $searchText, prompt: "Search reminders")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Toggle("Hide Completed", isOn: $settings.hideCompleted)
-                        Picker("Priority", selection: $priorityFilter) {
-                            ForEach(PriorityFilter.allCases) { filter in
-                                Text(filter.label).tag(filter)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                    }
+                    ReminderFilterToolbar(
+                        hideCompleted: $settings.hideCompleted,
+                        priorityFilter: $priorityFilter
+                    )
                 }
             }
         }
@@ -111,12 +104,7 @@ struct TodayView: View {
                 ReminderRowView(reminder: reminder)
                 Spacer(minLength: 0)
                 if let list = reminder.list {
-                    Text(list.name)
-                        .font(.caption2)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: list.colorHex).opacity(0.15), in: Capsule())
-                        .foregroundStyle(Color(hex: list.colorHex))
+                    ListNameBadge(name: list.name, colorHex: list.colorHex)
                 }
             }
         }

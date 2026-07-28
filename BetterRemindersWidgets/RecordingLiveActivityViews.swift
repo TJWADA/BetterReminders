@@ -1,6 +1,7 @@
 import ActivityKit
 import SwiftUI
 import WidgetKit
+import BetterRemindersCore
 
 struct RecordingLiveActivityViews {
     // MARK: - Lock Screen (minimal fallback)

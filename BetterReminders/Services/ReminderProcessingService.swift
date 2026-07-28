@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import UserNotifications
+import BetterRemindersCore
 
 @Observable
 final class ReminderProcessingService {
@@ -27,15 +28,9 @@ final class ReminderProcessingService {
         lastCreatedTitles = []
         currentStatus = .pending
 
-        ListSeeder.seedIfNeeded(modelContext: modelContext)
-
         let audioPath = audioURL.path
         let job = ProcessingJob(status: .pending, audioFilePath: audioPath)
         modelContext.insert(job)
-
-        var firstResultTitle: String?
-        var firstResultListName: String?
-        var firstResultListIcon: String?
 
         do {
             guard FileManager.default.fileExists(atPath: audioPath) else {
@@ -72,32 +67,13 @@ final class ReminderProcessingService {
                 recentCorrections: AppSettings.shared.recentCorrections
             )
 
-            for item in parsed.reminders {
-                let targetList = ListSeeder.findList(named: item.list, in: lists)
-                    ?? ListSeeder.fallbackList(from: lists)
-
-                guard let targetList else {
-                    throw ProcessingError.noListsAvailable
-                }
-
-                let reminder = Reminder(
-                    title: item.title,
-                    rawTranscript: transcript,
-                    dueDate: ReminderParserService.parseDueDate(item.dueDate),
-                    priority: ReminderParserService.priorityValue(from: item.priority),
-                    audioFilePath: retainAudio ? audioPath : nil,
-                    list: targetList
-                )
-                modelContext.insert(reminder)
-                lastCreatedTitles.append(item.title)
-                await NotificationSchedulingService.schedule(for: reminder)
-
-                if firstResultTitle == nil {
-                    firstResultTitle = item.title
-                    firstResultListName = targetList.name
-                    firstResultListIcon = targetList.icon
-                }
-            }
+            let firstResult = await insertParsedReminders(
+                parsed.reminders,
+                transcript: transcript,
+                lists: lists,
+                retainAudioPath: retainAudio ? audioPath : nil,
+                modelContext: modelContext
+            )
 
             job.status = .done
             currentStatus = .done
@@ -110,9 +86,9 @@ final class ReminderProcessingService {
             }
 
             if updatesLiveActivity,
-               let firstResultTitle,
-               let firstResultListName,
-               let firstResultListIcon {
+               let firstResultTitle = firstResult.firstTitle,
+               let firstResultListName = firstResult.firstListName,
+               let firstResultListIcon = firstResult.firstListIcon {
                 await RecordingLiveActivityManager.showCompleted(
                     title: firstResultTitle,
                     listName: firstResultListName,
@@ -172,8 +148,6 @@ final class ReminderProcessingService {
 
         guard !isProcessing else { return }
 
-        ListSeeder.seedIfNeeded(modelContext: modelContext)
-
         isProcessing = true
         lastError = nil
         lastCreatedTitles = []
@@ -195,24 +169,13 @@ final class ReminderProcessingService {
                 recentCorrections: AppSettings.shared.recentCorrections
             )
 
-            for item in parsed.reminders {
-                let targetList = ListSeeder.findList(named: item.list, in: lists)
-                    ?? ListSeeder.fallbackList(from: lists)
-                guard let targetList else {
-                    throw ProcessingError.noListsAvailable
-                }
-                let reminder = Reminder(
-                    title: item.title,
-                    rawTranscript: transcript,
-                    dueDate: ReminderParserService.parseDueDate(item.dueDate),
-                    priority: ReminderParserService.priorityValue(from: item.priority),
-                    audioFilePath: retainAudio ? job.audioFilePath : nil,
-                    list: targetList
-                )
-                modelContext.insert(reminder)
-                lastCreatedTitles.append(item.title)
-                await NotificationSchedulingService.schedule(for: reminder)
-            }
+            _ = await insertParsedReminders(
+                parsed.reminders,
+                transcript: transcript,
+                lists: lists,
+                retainAudioPath: retainAudio ? job.audioFilePath : nil,
+                modelContext: modelContext
+            )
 
             job.status = .done
             currentStatus = .done
@@ -228,6 +191,46 @@ final class ReminderProcessingService {
         }
 
         isProcessing = false
+    }
+
+    @MainActor
+    private func insertParsedReminders(
+        _ items: [ParsedReminder],
+        transcript: String,
+        lists: [ReminderList],
+        retainAudioPath: String?,
+        modelContext: ModelContext
+    ) async -> (firstTitle: String?, firstListName: String?, firstListIcon: String?) {
+        var firstTitle: String?
+        var firstListName: String?
+        var firstListIcon: String?
+
+        for item in items {
+            let targetList = ListSeeder.findList(named: item.list, in: lists)
+                ?? ListSeeder.fallbackList(from: lists)
+
+            guard let targetList else { continue }
+
+            let reminder = Reminder(
+                title: item.title,
+                rawTranscript: transcript,
+                dueDate: ReminderParserService.parseDueDate(item.dueDate),
+                priority: ReminderParserService.priorityValue(from: item.priority),
+                audioFilePath: retainAudioPath,
+                list: targetList
+            )
+            modelContext.insert(reminder)
+            lastCreatedTitles.append(item.title)
+            await NotificationSchedulingService.schedule(for: reminder)
+
+            if firstTitle == nil {
+                firstTitle = item.title
+                firstListName = targetList.name
+                firstListIcon = targetList.icon
+            }
+        }
+
+        return (firstTitle, firstListName, firstListIcon)
     }
 
     private func sendConfirmationNotification(titles: [String]) async {

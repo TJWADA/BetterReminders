@@ -33,6 +33,38 @@ struct ListColorBadge: View {
     }
 }
 
+struct ListNameBadge: View {
+    let name: String
+    let colorHex: String
+
+    var body: some View {
+        Text(name)
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color(hex: colorHex).opacity(0.15), in: Capsule())
+            .foregroundStyle(Color(hex: colorHex))
+    }
+}
+
+struct ReminderFilterToolbar: View {
+    @Binding var hideCompleted: Bool
+    @Binding var priorityFilter: PriorityFilter
+
+    var body: some View {
+        Menu {
+            Toggle("Hide Completed", isOn: $hideCompleted)
+            Picker("Priority", selection: $priorityFilter) {
+                ForEach(PriorityFilter.allCases) { filter in
+                    Text(filter.label).tag(filter)
+                }
+            }
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+        }
+    }
+}
+
 struct SetupStepRow: View {
     let number: Int
     let title: String

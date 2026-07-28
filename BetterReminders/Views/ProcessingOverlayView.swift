@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 struct ProcessingOverlayView: View {
     let status: JobStatus?

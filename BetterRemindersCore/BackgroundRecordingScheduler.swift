@@ -1,10 +1,10 @@
 import BackgroundTasks
 import Foundation
 
-enum BackgroundRecordingScheduler {
-    static let taskIdentifier = "com.betterreminders.app.processRecording"
+public enum BackgroundRecordingScheduler {
+    public static let taskIdentifier = "com.betterreminders.app.processRecording"
 
-    static func scheduleProcessing() {
+    public static func scheduleProcessing() {
         let request = BGProcessingTaskRequest(identifier: taskIdentifier)
         request.requiresNetworkConnectivity = true
         request.requiresExternalPower = false

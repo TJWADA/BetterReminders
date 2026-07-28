@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import BetterRemindersCore
 
 struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
@@ -221,12 +222,12 @@ struct OnboardingView: View {
 
     private func saveAPIKeyIfNeeded() {
         saveError = nil
-        let trimmed = KeychainHelper.sanitizeAPIKey(apiKey)
-        guard !trimmed.isEmpty else { return }
         do {
-            try KeychainHelper.saveAPIKey(trimmed)
-            apiKey = trimmed
+            apiKey = try KeychainHelper.saveAPIKeyIfValid(apiKey)
         } catch {
+            if case KeychainHelper.KeychainError.invalidFormat = error {
+                return
+            }
             saveError = error.localizedDescription
         }
     }

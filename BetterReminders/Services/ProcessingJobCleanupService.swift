@@ -13,16 +13,14 @@ enum ProcessingJobCleanupService {
             FetchDescriptor<ProcessingJob>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
         ) else { return }
 
-        for job in allJobs where job.createdAt < cutoff && (job.status == .done || job.status == .failed) {
-            modelContext.delete(job)
+        let afterAgeFilter = allJobs.filter {
+            !($0.createdAt < cutoff && ($0.status == .done || $0.status == .failed))
         }
+        let jobsToKeep = Set(afterAgeFilter.prefix(maxRetainedJobs).map(\.persistentModelID))
 
-        guard let remaining = try? modelContext.fetch(
-            FetchDescriptor<ProcessingJob>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-        ) else { return }
-
-        if remaining.count > maxRetainedJobs {
-            for job in remaining.dropFirst(maxRetainedJobs) {
+        for job in allJobs {
+            let isStale = job.createdAt < cutoff && (job.status == .done || job.status == .failed)
+            if isStale || !jobsToKeep.contains(job.persistentModelID) {
                 modelContext.delete(job)
             }
         }

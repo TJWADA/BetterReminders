@@ -1,6 +1,7 @@
 import BackgroundTasks
 import Foundation
 import SwiftData
+import BetterRemindersCore
 
 enum BackgroundRecordingProcessor {
     static func register() {
@@ -14,10 +15,6 @@ enum BackgroundRecordingProcessor {
             }
             handle(processingTask)
         }
-    }
-
-    static func scheduleProcessing() {
-        BackgroundRecordingScheduler.scheduleProcessing()
     }
 
     @MainActor

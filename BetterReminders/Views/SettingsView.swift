@@ -1,5 +1,6 @@
 import SwiftUI
 import UserNotifications
+import BetterRemindersCore
 
 struct SettingsView: View {
     @State private var settings = AppSettings.shared
@@ -101,14 +102,8 @@ struct SettingsView: View {
         saveError = nil
         testResult = nil
         showSavedConfirmation = false
-        let trimmed = KeychainHelper.sanitizeAPIKey(apiKey)
-        guard !trimmed.isEmpty else {
-            saveError = "API key cannot be empty"
-            return
-        }
         do {
-            try KeychainHelper.saveAPIKey(trimmed)
-            apiKey = trimmed
+            apiKey = try KeychainHelper.saveAPIKeyIfValid(apiKey)
             showSavedConfirmation = true
             HapticHelper.notification(.success)
         } catch {

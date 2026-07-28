@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import BetterRemindersCore
 
 struct ListsView: View {
     @Environment(\.modelContext) private var modelContext

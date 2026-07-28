@@ -20,13 +20,9 @@ struct ReminderDetailView: View {
                 TextField("Title", text: $reminder.title, axis: .vertical)
                     .lineLimit(2...4)
                 Toggle("Completed", isOn: $reminder.isCompleted)
-                    .onChange(of: reminder.isCompleted) { _, isCompleted in
+                    .onChange(of: reminder.isCompleted) { _, _ in
                         Task {
-                            if isCompleted {
-                                await NotificationSchedulingService.cancel(for: reminder.id)
-                            } else {
-                                await NotificationSchedulingService.schedule(for: reminder)
-                            }
+                            await reminder.updateNotificationForCompletion()
                         }
                     }
                 Toggle("Due Date", isOn: $hasDueDate)

@@ -1,11 +1,20 @@
 import ActivityKit
 import Foundation
 
-enum RecordingLiveActivityError: LocalizedError {
+public enum RecordingLiveActivityError: LocalizedError, CustomNSError {
     case disabled
     case failed(String)
 
-    var errorDescription: String? {
+    public static var errorDomain: String { "BetterReminders.RecordingLiveActivityError" }
+
+    public var errorCode: Int {
+        switch self {
+        case .disabled: return 1
+        case .failed: return 2
+        }
+    }
+
+    public var errorDescription: String? {
         switch self {
         case .disabled:
             return "Live Activities are turned off. Enable them in Settings → BetterReminders → Live Activities."
@@ -15,11 +24,11 @@ enum RecordingLiveActivityError: LocalizedError {
     }
 }
 
-enum RecordingLiveActivityManager {
+public enum RecordingLiveActivityManager {
     private static var currentActivity: Activity<RecordingActivityAttributes>?
 
     @discardableResult
-    static func start(sessionID: String = UUID().uuidString) async throws -> Bool {
+    public static func start(sessionID: String = UUID().uuidString) async throws -> Bool {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             throw RecordingLiveActivityError.disabled
         }
@@ -43,7 +52,7 @@ enum RecordingLiveActivityManager {
         }
     }
 
-    static func updateRecording(
+    public static func updateRecording(
         elapsedSeconds: Int,
         audioLevel: Double,
         statusMessage: String = "Recording…"
@@ -59,7 +68,7 @@ enum RecordingLiveActivityManager {
         ))
     }
 
-    static func showTranscribing() async {
+    public static func showTranscribing() async {
         await update(state: RecordingActivityAttributes.ContentState(
             phase: .transcribing,
             elapsedSeconds: 0,
@@ -71,7 +80,7 @@ enum RecordingLiveActivityManager {
         ))
     }
 
-    static func showParsing() async {
+    public static func showParsing() async {
         await update(state: RecordingActivityAttributes.ContentState(
             phase: .parsing,
             elapsedSeconds: 0,
@@ -83,7 +92,7 @@ enum RecordingLiveActivityManager {
         ))
     }
 
-    static func showCompleted(title: String, listName: String, listIcon: String) async {
+    public static func showCompleted(title: String, listName: String, listIcon: String) async {
         let state = RecordingActivityAttributes.ContentState(
             phase: .completed,
             elapsedSeconds: 0,
@@ -97,7 +106,7 @@ enum RecordingLiveActivityManager {
         await endAfterDelay(seconds: 4, state: state)
     }
 
-    static func showFailed(message: String) async {
+    public static func showFailed(message: String) async {
         let state = RecordingActivityAttributes.ContentState(
             phase: .failed,
             elapsedSeconds: 0,
@@ -111,7 +120,7 @@ enum RecordingLiveActivityManager {
         await endAfterDelay(seconds: 6, state: state)
     }
 
-    static func endImmediate() async {
+    public static func endImmediate() async {
         guard let activity = resolveActivity() else { return }
         let state = RecordingActivityAttributes.ContentState(
             phase: .failed,
