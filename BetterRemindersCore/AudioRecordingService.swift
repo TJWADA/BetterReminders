@@ -83,8 +83,10 @@ public final class AudioRecordingService {
     }
 
     public var elapsedTime: TimeInterval {
-        guard let start = recordingStartDate else { return 0 }
-        return Date().timeIntervalSince(start)
+        if let start = recordingStartDate {
+            return Date().timeIntervalSince(start)
+        }
+        return RecordingSessionStore.sessionElapsedTime
     }
 
     public func currentAudioLevel() -> Double {

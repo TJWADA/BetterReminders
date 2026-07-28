@@ -12,60 +12,21 @@ struct ToggleRecordingIntent: AppIntent {
         recorder.resetStaleSession()
 
         if recorder.isRecording {
+            guard ActionButtonRecordingHandler.shouldStopRecording(recorder) else {
+                return .result()
+            }
+
             do {
                 _ = try await ActionButtonFlowCoordinator.stopRecording()
             } catch {
-                postFailure(error)
+                ActionButtonRecordingHandler.postFailure(error)
                 throw error
             }
             return .result()
         }
 
-        if !RecordingSessionStore.isActionButtonArmed {
-            ActionButtonFlowCoordinator.armAndOpenRecordTab()
-            return .result()
-        }
-
-        if KeychainHelper.loadAPIKey()?.isEmpty ?? true {
-            let error = ActionButtonIntentError.apiKeyMissing
-            postFailure(error)
-            throw error
-        }
-
-        if !recorder.hasMicrophonePermission {
-            let granted = await recorder.requestMicrophonePermission()
-            guard granted else {
-                let error = AudioRecordingService.RecordingError.permissionDenied
-                postFailure(error)
-                throw error
-            }
-        }
-
-        let speechStatus = await SpeechService.requestAuthorization()
-        guard speechStatus == .authorized else {
-            let error = ActionButtonIntentError.speechPermissionDenied
-            postFailure(error)
-            throw error
-        }
-
-        do {
-            try await ActionButtonFlowCoordinator.startRecording()
-        } catch {
-            postFailure(error)
-            throw error
-        }
-
+        await ActionButtonRecordingHandler.prepareAppOpenForRecording()
         return .result()
-    }
-
-    private func postFailure(_ error: Error) {
-        NotificationCenter.default.post(
-            name: .actionButtonRecordingFailed,
-            object: nil,
-            userInfo: [
-                "message": (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            ]
-        )
     }
 }
 

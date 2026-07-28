@@ -1,12 +1,6 @@
 import Foundation
 
 public enum ActionButtonFlowCoordinator {
-    public static func armAndOpenRecordTab() {
-        RecordingSessionStore.setActionButtonArmed(true)
-        RecordingSessionStore.markOpenRecordTab()
-        NotificationCenter.default.post(name: .actionButtonArmedStateChanged, object: nil)
-    }
-
     @MainActor
     public static func startRecording() async throws {
         let recorder = AudioRecordingService.shared
@@ -21,7 +15,6 @@ public enum ActionButtonFlowCoordinator {
 
         HapticHelper.recordingStarted()
         _ = try recorder.startRecording()
-        RecordingSessionStore.setActionButtonArmed(false)
         NotificationCenter.default.post(name: .actionButtonRecordingStarted, object: nil)
     }
 
@@ -41,7 +34,6 @@ public enum ActionButtonFlowCoordinator {
             throw RecordingStopHandler.RecordingStopError.recordingTooShort
         }
 
-        RecordingSessionStore.setActionButtonArmed(false)
         NotificationCenter.default.post(
             name: .actionButtonRecordingStopped,
             object: nil,
@@ -55,5 +47,5 @@ public extension Notification.Name {
     static let actionButtonRecordingStarted = Notification.Name("actionButtonRecordingStarted")
     static let actionButtonRecordingStopped = Notification.Name("actionButtonRecordingStopped")
     static let actionButtonRecordingFailed = Notification.Name("actionButtonRecordingFailed")
-    static let actionButtonArmedStateChanged = Notification.Name("actionButtonArmedStateChanged")
+    static let actionButtonOpenRecordingRequested = Notification.Name("actionButtonOpenRecordingRequested")
 }

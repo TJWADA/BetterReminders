@@ -9,6 +9,7 @@ struct BetterRemindersApp: App {
     let modelContainer: ModelContainer
 
     init() {
+        RecordingSessionStore.clearActionButtonState()
         do {
             modelContainer = try ModelContainer(for: Reminder.self, ReminderList.self, ProcessingJob.self)
             BackgroundRecordingProcessor.register()
@@ -22,6 +23,7 @@ struct BetterRemindersApp: App {
             HomeView()
                 .onAppear {
                     Task {
+                        await ActionButtonRecordingHandler.continueFromAppOpenIfNeeded()
                         await requestNotificationPermission()
                         ListSeeder.seedIfNeeded(modelContext: modelContainer.mainContext)
                         await syncNotificationsAndCleanup()
@@ -33,9 +35,15 @@ struct BetterRemindersApp: App {
                         await processPendingRecordings()
                     }
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .actionButtonOpenRecordingRequested)) { _ in
+                    Task {
+                        await ActionButtonRecordingHandler.continueFromAppOpenIfNeeded()
+                    }
+                }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         Task {
+                            await ActionButtonRecordingHandler.continueFromAppOpenIfNeeded()
                             await syncNotificationsAndCleanup()
                             await processPendingRecordings()
                         }

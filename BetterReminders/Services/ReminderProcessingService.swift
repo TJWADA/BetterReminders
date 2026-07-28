@@ -19,6 +19,7 @@ final class ReminderProcessingService {
         audioURL: URL,
         modelContext: ModelContext,
         retainAudio: Bool,
+        defaultList: ReminderList? = nil,
         updatesLiveActivity: Bool = false
     ) async {
         guard !isProcessing else { return }
@@ -71,6 +72,7 @@ final class ReminderProcessingService {
                 parsed.reminders,
                 transcript: transcript,
                 lists: lists,
+                defaultList: defaultList,
                 retainAudioPath: retainAudio ? audioPath : nil,
                 modelContext: modelContext
             )
@@ -121,7 +123,7 @@ final class ReminderProcessingService {
             case .recordingFileMissing:
                 return "Recording file could not be found"
             case .noListsAvailable:
-                return "No reminder lists available. Open the Lists tab once, then try again."
+                return "No reminder lists available. Create a list first, then try again."
             }
         }
     }
@@ -198,6 +200,7 @@ final class ReminderProcessingService {
         _ items: [ParsedReminder],
         transcript: String,
         lists: [ReminderList],
+        defaultList: ReminderList? = nil,
         retainAudioPath: String?,
         modelContext: ModelContext
     ) async -> (firstTitle: String?, firstListName: String?, firstListIcon: String?) {
@@ -207,6 +210,7 @@ final class ReminderProcessingService {
 
         for item in items {
             let targetList = ListSeeder.findList(named: item.list, in: lists)
+                ?? defaultList
                 ?? ListSeeder.fallbackList(from: lists)
 
             guard let targetList else { continue }

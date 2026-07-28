@@ -21,6 +21,7 @@
 		A1000000000000000000000C /* ReminderParserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* ReminderParserService.swift */; };
 		A1000000000000000000000D /* ReminderProcessingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000D /* ReminderProcessingService.swift */; };
 		A1000000000000000000000E /* ToggleRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000E /* ToggleRecordingIntent.swift */; };
+		A10000000000000000000058 /* ActionButtonRecordingHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000058 /* ActionButtonRecordingHandler.swift */; };
 		A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* BetterRemindersShortcuts.swift */; };
 		A10000000000000000000010 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RecordingActivityAttributes.swift */; };
 		A10000000000000000000011 /* RecordingLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* RecordingLiveActivityManager.swift */; };
@@ -69,6 +70,11 @@
 		A10000000000000000000051 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
 		A10000000000000000000052 /* BetterRemindersCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000053 /* Reminder+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* Reminder+Notifications.swift */; };
+		A10000000000000000000054 /* ListEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000054 /* ListEditView.swift */; };
+		A10000000000000000000055 /* AddReminderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000055 /* AddReminderSheet.swift */; };
+		A10000000000000000000056 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000056 /* ListDetailView.swift */; };
+		A10000000000000000000057 /* RecordingAnimationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000057 /* RecordingAnimationViews.swift */; };
+		A10000000000000000000059 /* ExpandableOverlayViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000059 /* ExpandableOverlayViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -142,6 +148,7 @@
 		A2000000000000000000000C /* ReminderParserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParserService.swift; sourceTree = "<group>"; };
 		A2000000000000000000000D /* ReminderProcessingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderProcessingService.swift; sourceTree = "<group>"; };
 		A2000000000000000000000E /* ToggleRecordingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleRecordingIntent.swift; sourceTree = "<group>"; };
+		A20000000000000000000058 /* ActionButtonRecordingHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonRecordingHandler.swift; sourceTree = "<group>"; };
 		A2000000000000000000000F /* BetterRemindersShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterRemindersShortcuts.swift; sourceTree = "<group>"; };
 		A20000000000000000000010 /* RecordingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityAttributes.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* RecordingLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingLiveActivityManager.swift; sourceTree = "<group>"; };
@@ -179,6 +186,11 @@
 		A20000000000000000000037 /* Reminder+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Notifications.swift"; sourceTree = "<group>"; };
 		A20000000000000000000038 /* BetterRemindersCore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BetterRemindersCore.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonFlowCoordinator.swift; sourceTree = "<group>"; };
+		A20000000000000000000054 /* ListEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListEditView.swift; sourceTree = "<group>"; };
+		A20000000000000000000055 /* AddReminderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderSheet.swift; sourceTree = "<group>"; };
+		A20000000000000000000056 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
+		A20000000000000000000057 /* RecordingAnimationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingAnimationViews.swift; sourceTree = "<group>"; };
+		A20000000000000000000059 /* ExpandableOverlayViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableOverlayViews.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* BetterReminders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterReminders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* BetterRemindersWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BetterRemindersWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000005 /* BetterRemindersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterRemindersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -327,6 +339,7 @@
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000000E /* ToggleRecordingIntent.swift */,
+				A20000000000000000000058 /* ActionButtonRecordingHandler.swift */,
 				A2000000000000000000000F /* BetterRemindersShortcuts.swift */,
 			);
 			path = Intents;
@@ -336,6 +349,11 @@
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000004B /* HomeView.swift */,
+				A20000000000000000000056 /* ListDetailView.swift */,
+				A20000000000000000000057 /* RecordingAnimationViews.swift */,
+				A20000000000000000000059 /* ExpandableOverlayViews.swift */,
+				A20000000000000000000054 /* ListEditView.swift */,
+				A20000000000000000000055 /* AddReminderSheet.swift */,
 				A20000000000000000000015 /* ReminderDetailView.swift */,
 				A20000000000000000000017 /* ProcessingOverlayView.swift */,
 				A20000000000000000000019 /* SettingsView.swift */,
@@ -530,8 +548,14 @@
 				A10000000000000000000024 /* ProcessingJobCleanupService.swift in Sources */,
 				A1000000000000000000002E /* BackgroundRecordingProcessor.swift in Sources */,
 				A1000000000000000000000E /* ToggleRecordingIntent.swift in Sources */,
+				A10000000000000000000058 /* ActionButtonRecordingHandler.swift in Sources */,
 				A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */,
 				A10000000000000000000012 /* HomeView.swift in Sources */,
+				A10000000000000000000056 /* ListDetailView.swift in Sources */,
+				A10000000000000000000057 /* RecordingAnimationViews.swift in Sources */,
+				A10000000000000000000059 /* ExpandableOverlayViews.swift in Sources */,
+				A10000000000000000000054 /* ListEditView.swift in Sources */,
+				A10000000000000000000055 /* AddReminderSheet.swift in Sources */,
 				A10000000000000000000015 /* ReminderDetailView.swift in Sources */,
 				A10000000000000000000017 /* ProcessingOverlayView.swift in Sources */,
 				A10000000000000000000019 /* SettingsView.swift in Sources */,

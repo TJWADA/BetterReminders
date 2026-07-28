@@ -14,16 +14,19 @@ struct DevPanelView: View {
     @State private var speechGranted = false
     @State private var notificationsGranted = false
     @State private var apiKeyConfigured = false
-    @State private var isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
+
+    private var hasRecentActivity: Bool {
+        processor.isProcessing
+            || processor.lastError != nil
+            || !processor.lastCreatedTitles.isEmpty
+            || !jobs.isEmpty
+    }
 
     var body: some View {
         NavigationStack {
-            List {
+            Form {
                 statusSection
-                if processor.isProcessing || processor.lastError != nil || !processor.lastCreatedTitles.isEmpty {
-                    processingSection
-                }
-                if !jobs.isEmpty {
+                if hasRecentActivity {
                     jobsSection
                 }
             }
@@ -37,11 +40,7 @@ struct DevPanelView: View {
             .onAppear {
                 refreshStatus()
             }
-            .onReceive(NotificationCenter.default.publisher(for: .actionButtonArmedStateChanged)) { _ in
-                isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
-            }
         }
-        .presentationDetents([.medium, .large])
     }
 
     private var statusSection: some View {
@@ -53,7 +52,6 @@ struct DevPanelView: View {
             }
             statusRow("Processing", value: processor.isProcessing ? "In progress" : "Idle",
                       isGood: !processor.isProcessing)
-            statusRow("Action Button", value: isActionButtonArmed ? "Armed" : "Idle", isGood: true)
             statusRow("API Key", value: apiKeyConfigured ? "Configured" : "Missing", isGood: apiKeyConfigured)
             statusRow("Microphone", value: micGranted ? "Granted" : "Denied", isGood: micGranted)
             statusRow("Speech", value: speechGranted ? "Granted" : "Denied", isGood: speechGranted)
@@ -61,8 +59,8 @@ struct DevPanelView: View {
         }
     }
 
-    private var processingSection: some View {
-        Section("Last Processing") {
+    private var jobsSection: some View {
+        Section("Recent Jobs") {
             if processor.isProcessing, let status = processor.currentStatus {
                 Label(status.rawValue.capitalized, systemImage: "arrow.triangle.2.circlepath")
             }
@@ -78,11 +76,7 @@ struct DevPanelView: View {
                     .foregroundStyle(.red)
                     .textSelection(.enabled)
             }
-        }
-    }
 
-    private var jobsSection: some View {
-        Section("Recent Jobs") {
             ForEach(jobs.prefix(10)) { job in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
@@ -146,7 +140,6 @@ struct DevPanelView: View {
         micGranted = recorder.hasMicrophonePermission
         speechGranted = SpeechService.authorizationStatus == .authorized
         apiKeyConfigured = !(KeychainHelper.loadAPIKey()?.isEmpty ?? true)
-        isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
         Task {
             let settings = await UNUserNotificationCenter.current().notificationSettings()
             notificationsGranted = settings.authorizationStatus == .authorized
