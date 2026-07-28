@@ -1,5 +1,39 @@
 import Foundation
 
+enum ReminderGroupMode: String, CaseIterable, Identifiable {
+    case byList
+    case byDueDate
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .byList: return "By List"
+        case .byDueDate: return "By Due Date"
+        }
+    }
+}
+
+enum ReminderSortMode: String, CaseIterable, Identifiable {
+    case dueDate
+    case createdNewest
+    case createdOldest
+    case priority
+    case title
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .dueDate: return "Due Date"
+        case .createdNewest: return "Newest First"
+        case .createdOldest: return "Oldest First"
+        case .priority: return "Priority"
+        case .title: return "Title"
+        }
+    }
+}
+
 enum PriorityFilter: Int, CaseIterable, Identifiable {
     case all = 0
     case lowOrHigher = 1
@@ -63,6 +97,44 @@ enum ReminderFilters {
                 return true
             case (nil, nil):
                 return lhs.createdAt > rhs.createdAt
+            }
+        }
+    }
+
+    static func sortForListView(_ reminders: [Reminder]) -> [Reminder] {
+        reminders.sorted { lhs, rhs in
+            if lhs.isCompleted != rhs.isCompleted {
+                return !lhs.isCompleted
+            }
+            switch (lhs.dueDate, rhs.dueDate) {
+            case let (l?, r?):
+                return l < r
+            case (nil, _?):
+                return false
+            case (_?, nil):
+                return true
+            case (nil, nil):
+                return lhs.createdAt > rhs.createdAt
+            }
+        }
+    }
+
+    static func sort(_ reminders: [Reminder], by mode: ReminderSortMode) -> [Reminder] {
+        switch mode {
+        case .dueDate:
+            return sortByDueDate(reminders)
+        case .createdNewest:
+            return reminders.sorted { $0.createdAt > $1.createdAt }
+        case .createdOldest:
+            return reminders.sorted { $0.createdAt < $1.createdAt }
+        case .priority:
+            return reminders.sorted { lhs, rhs in
+                if lhs.priority != rhs.priority { return lhs.priority > rhs.priority }
+                return lhs.createdAt > rhs.createdAt
+            }
+        case .title:
+            return reminders.sorted {
+                $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
             }
         }
     }

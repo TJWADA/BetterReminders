@@ -2,26 +2,25 @@ import AVFoundation
 import Foundation
 
 @Observable
-final class AudioRecordingService {
-    static let shared = AudioRecordingService()
+public final class AudioRecordingService {
+    public static let shared = AudioRecordingService()
 
-    private(set) var recordingStartDate: Date?
-    private(set) var currentRecordingURL: URL?
+    public private(set) var recordingStartDate: Date?
+    public private(set) var currentRecordingURL: URL?
 
     private var audioRecorder: AVAudioRecorder?
 
     private init() {}
 
-    /// True if the recorder is running or a persisted Action Button session is active.
-    var isRecording: Bool {
+    public var isRecording: Bool {
         (audioRecorder?.isRecording == true) || RecordingSessionStore.isSessionActive
     }
 
-    var hasMicrophonePermission: Bool {
+    public var hasMicrophonePermission: Bool {
         AVAudioApplication.shared.recordPermission == .granted
     }
 
-    func requestMicrophonePermission() async -> Bool {
+    public func requestMicrophonePermission() async -> Bool {
         await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { granted in
                 continuation.resume(returning: granted)
@@ -29,7 +28,7 @@ final class AudioRecordingService {
         }
     }
 
-    func startRecording() throws -> URL {
+    public func startRecording() throws -> URL {
         if isRecording {
             throw RecordingError.alreadyRecording
         }
@@ -58,7 +57,7 @@ final class AudioRecordingService {
     }
 
     @discardableResult
-    func stopRecording() -> URL? {
+    public func stopRecording() -> URL? {
         if let recorder = audioRecorder, recorder.isRecording {
             recorder.stop()
             audioRecorder = nil
@@ -70,7 +69,6 @@ final class AudioRecordingService {
             return url
         }
 
-        // Recover when Action Button stop runs in a new intent invocation without a live recorder.
         if RecordingSessionStore.isSessionActive,
            let path = RecordingSessionStore.activeRecordingPath {
             RecordingSessionStore.markStopped()
@@ -84,12 +82,21 @@ final class AudioRecordingService {
         return nil
     }
 
-    var elapsedTime: TimeInterval {
+    public var elapsedTime: TimeInterval {
         guard let start = recordingStartDate else { return 0 }
         return Date().timeIntervalSince(start)
     }
 
-    func resetStaleSession() {
+    public func currentAudioLevel() -> Double {
+        guard let recorder = audioRecorder, recorder.isRecording else { return 0 }
+        recorder.updateMeters()
+        let power = recorder.averagePower(forChannel: 0)
+        let minDb: Float = -60
+        let clamped = max(minDb, power)
+        return Double((clamped - minDb) / -minDb)
+    }
+
+    public func resetStaleSession() {
         if RecordingSessionStore.isSessionActive, audioRecorder == nil {
             RecordingSessionStore.markStopped()
         }
@@ -112,12 +119,12 @@ final class AudioRecordingService {
         return dir.appendingPathComponent("\(UUID().uuidString).m4a")
     }
 
-    enum RecordingError: LocalizedError {
+    public enum RecordingError: LocalizedError {
         case alreadyRecording
         case failedToStart
         case permissionDenied
 
-        var errorDescription: String? {
+        public var errorDescription: String? {
             switch self {
             case .alreadyRecording: return "Already recording"
             case .failedToStart: return "Failed to start recording"

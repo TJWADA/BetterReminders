@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import BetterRemindersCore
 
 @main
 struct BetterRemindersApp: App {
@@ -10,6 +11,7 @@ struct BetterRemindersApp: App {
     init() {
         do {
             modelContainer = try ModelContainer(for: Reminder.self, ReminderList.self, ProcessingJob.self)
+            BackgroundRecordingProcessor.register()
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
@@ -17,7 +19,7 @@ struct BetterRemindersApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            HomeView()
                 .onAppear {
                     Task {
                         await requestNotificationPermission()
@@ -58,13 +60,6 @@ struct BetterRemindersApp: App {
 
     @MainActor
     private func processPendingRecordings() async {
-        while let url = PendingRecordingStore.dequeue() {
-            await ReminderProcessingService.shared.processRecording(
-                audioURL: url,
-                modelContext: modelContainer.mainContext,
-                retainAudio: AppSettings.shared.retainAudio
-            )
-        }
-        ProcessingJobCleanupService.cleanup(modelContext: modelContainer.mainContext)
+        await BackgroundRecordingProcessor.processAllPending()
     }
 }

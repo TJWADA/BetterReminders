@@ -1,62 +1,41 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
+import BetterRemindersCore
 
 struct RecordingLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RecordingActivityAttributes.self) { context in
-            HStack(spacing: 12) {
-                Image(systemName: context.state.isRecording ? "mic.fill" : "waveform")
-                    .foregroundStyle(context.state.isRecording ? .red : .blue)
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(context.state.statusMessage)
-                        .font(.headline)
-                    if context.state.isRecording {
-                        Text(formatElapsed(context.state.elapsedSeconds))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
-            }
-            .padding()
-            .activityBackgroundTint(Color.black.opacity(0.8))
+            RecordingLiveActivityViews.lockScreenCompact(context: context)
+                .activityBackgroundTint(Color.black.opacity(0.85))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Image(systemName: "mic.fill")
-                        .foregroundStyle(.red)
+                    RecordingLiveActivityViews.phaseIcon(context: context, size: .title3)
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    Text(context.state.statusMessage)
-                        .font(.caption)
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    if context.state.isRecording {
-                        Text(formatElapsed(context.state.elapsedSeconds))
-                            .font(.caption.monospacedDigit())
+                    VStack(spacing: 2) {
+                        Text(context.state.statusMessage)
+                            .font(.caption)
+                            .lineLimit(2)
+                        RecordingLiveActivityViews.phaseSubtitle(context: context)
                     }
                 }
-            } compactLeading: {
-                Image(systemName: "mic.fill")
-                    .foregroundStyle(.red)
-            } compactTrailing: {
-                if context.state.isRecording {
-                    Text(formatElapsed(context.state.elapsedSeconds))
-                        .font(.caption2.monospacedDigit())
+                DynamicIslandExpandedRegion(.trailing) {
+                    RecordingLiveActivityViews.compactTrailing(context: context)
                 }
+                DynamicIslandExpandedRegion(.bottom) {
+                    RecordingLiveActivityViews.expandedBottom(context: context)
+                }
+            } compactLeading: {
+                RecordingLiveActivityViews.phaseIcon(context: context, size: .caption)
+            } compactTrailing: {
+                RecordingLiveActivityViews.compactTrailing(context: context)
             } minimal: {
-                Image(systemName: "mic.fill")
-                    .foregroundStyle(.red)
+                RecordingLiveActivityViews.minimalIcon(context: context)
             }
         }
-    }
-
-    private func formatElapsed(_ seconds: Int) -> String {
-        let mins = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%d:%02d", mins, secs)
     }
 }
 

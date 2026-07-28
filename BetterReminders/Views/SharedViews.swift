@@ -1,4 +1,6 @@
 import SwiftUI
+import SwiftData
+import BetterRemindersCore
 
 extension Color {
     init(hex: String) {
@@ -33,26 +35,49 @@ struct ListColorBadge: View {
     }
 }
 
-struct SetupStepRow: View {
-    let number: Int
-    let title: String
-    let detail: String
+struct ListNameBadge: View {
+    let name: String
+    let colorHex: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(number)")
-                .font(.caption.bold())
-                .frame(width: 24, height: 24)
-                .background(Color.accentColor.opacity(0.15), in: Circle())
-                .foregroundStyle(Color.accentColor)
+        Text(name)
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color(hex: colorHex).opacity(0.15), in: Capsule())
+            .foregroundStyle(Color(hex: colorHex))
+    }
+}
+
+struct ReminderRowView: View {
+    @Bindable var reminder: Reminder
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button {
+                reminder.isCompleted.toggle()
+                HapticHelper.selection()
+                Task {
+                    await reminder.updateNotificationForCompletion()
+                }
+            } label: {
+                Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(reminder.isCompleted ? .green : .secondary)
+                    .font(.title3)
+            }
+            .buttonStyle(.plain)
+
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(reminder.title)
+                    .strikethrough(reminder.isCompleted)
+                    .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
+                if let dueDate = reminder.dueDate {
+                    Text(dueDate.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption)
+                        .foregroundStyle(ReminderFilters.isOverdue(reminder) ? .red : .secondary)
+                }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
     }
 }

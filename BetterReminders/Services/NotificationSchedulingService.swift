@@ -14,9 +14,9 @@ enum NotificationSchedulingService {
     static func schedule(for reminder: Reminder) async {
         await cancel(for: reminder.id)
 
-        guard !reminder.isCompleted,
-              let dueDate = reminder.dueDate,
-              dueDate > Date() else { return }
+        guard shouldSchedule(for: reminder) else { return }
+
+        let dueDate = reminder.dueDate!
 
         let content = UNMutableNotificationContent()
         content.title = reminder.title
@@ -54,7 +54,7 @@ enum NotificationSchedulingService {
 
         for reminder in reminders {
             let id = identifier(for: reminder.id)
-            if reminder.isCompleted || reminder.dueDate == nil || (reminder.dueDate ?? .distantPast) <= Date() {
+            if !shouldSchedule(for: reminder) {
                 if dueIDs.contains(id) {
                     await cancel(for: reminder.id)
                 }

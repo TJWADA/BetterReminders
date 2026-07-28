@@ -1,26 +1,26 @@
 import UIKit
 
-enum HapticHelper {
-    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+public enum HapticHelper {
+    public static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
     }
 
-    static func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+    public static func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         UINotificationFeedbackGenerator().notificationOccurred(type)
     }
 
-    static func selection() {
+    public static func selection() {
         UISelectionFeedbackGenerator().selectionChanged()
     }
 
-    static func recordingStarted() {
+    public static func recordingStarted() {
         impact(.heavy)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
             impact(.rigid)
         }
     }
 
-    static func recordingStopped() {
+    public static func recordingStopped() {
         impact(.medium)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             notification(.success)

@@ -53,13 +53,14 @@ enum KeychainHelper {
         return key?.isEmpty == false ? key : nil
     }
 
-    static func deleteAPIKey() {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: "openai",
-        ]
-        SecItemDelete(query as CFDictionary)
+    @discardableResult
+    static func saveAPIKeyIfValid(_ key: String) throws -> String {
+        let trimmed = sanitizeAPIKey(key)
+        guard !trimmed.isEmpty else {
+            throw KeychainError.invalidFormat
+        }
+        try saveAPIKey(trimmed)
+        return trimmed
     }
 
     enum KeychainError: LocalizedError {

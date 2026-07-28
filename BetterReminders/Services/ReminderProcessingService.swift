@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import UserNotifications
+import BetterRemindersCore
 
 @Observable
 final class ReminderProcessingService {
@@ -17,7 +18,8 @@ final class ReminderProcessingService {
     func processRecording(
         audioURL: URL,
         modelContext: ModelContext,
-        retainAudio: Bool
+        retainAudio: Bool,
+        updatesLiveActivity: Bool = false
     ) async {
         guard !isProcessing else { return }
 
@@ -25,8 +27,6 @@ final class ReminderProcessingService {
         lastError = nil
         lastCreatedTitles = []
         currentStatus = .pending
-
-        ListSeeder.seedIfNeeded(modelContext: modelContext)
 
         let audioPath = audioURL.path
         let job = ProcessingJob(status: .pending, audioFilePath: audioPath)
@@ -40,6 +40,9 @@ final class ReminderProcessingService {
             currentStatus = .transcribing
             job.status = .transcribing
             try modelContext.save()
+            if updatesLiveActivity {
+                await RecordingLiveActivityManager.showTranscribing()
+            }
 
             let transcript = try await SpeechService.transcribe(audioURL: audioURL)
             job.transcript = transcript
@@ -47,6 +50,9 @@ final class ReminderProcessingService {
             currentStatus = .parsing
             job.status = .parsing
             try modelContext.save()
+            if updatesLiveActivity {
+                await RecordingLiveActivityManager.showParsing()
+            }
 
             let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
                 sortBy: [SortDescriptor(\.sortOrder)]
@@ -61,26 +67,13 @@ final class ReminderProcessingService {
                 recentCorrections: AppSettings.shared.recentCorrections
             )
 
-            for item in parsed.reminders {
-                let targetList = ListSeeder.findList(named: item.list, in: lists)
-                    ?? ListSeeder.fallbackList(from: lists)
-
-                guard let targetList else {
-                    throw ProcessingError.noListsAvailable
-                }
-
-                let reminder = Reminder(
-                    title: item.title,
-                    rawTranscript: transcript,
-                    dueDate: ReminderParserService.parseDueDate(item.dueDate),
-                    priority: ReminderParserService.priorityValue(from: item.priority),
-                    audioFilePath: retainAudio ? audioPath : nil,
-                    list: targetList
-                )
-                modelContext.insert(reminder)
-                lastCreatedTitles.append(item.title)
-                await NotificationSchedulingService.schedule(for: reminder)
-            }
+            let firstResult = await insertParsedReminders(
+                parsed.reminders,
+                transcript: transcript,
+                lists: lists,
+                retainAudioPath: retainAudio ? audioPath : nil,
+                modelContext: modelContext
+            )
 
             job.status = .done
             currentStatus = .done
@@ -92,6 +85,17 @@ final class ReminderProcessingService {
                 try? FileManager.default.removeItem(at: audioURL)
             }
 
+            if updatesLiveActivity,
+               let firstResultTitle = firstResult.firstTitle,
+               let firstResultListName = firstResult.firstListName,
+               let firstResultListIcon = firstResult.firstListIcon {
+                await RecordingLiveActivityManager.showCompleted(
+                    title: firstResultTitle,
+                    listName: firstResultListName,
+                    listIcon: firstResultListIcon
+                )
+            }
+
             await sendConfirmationNotification(titles: lastCreatedTitles)
         } catch {
             job.status = .failed
@@ -99,6 +103,10 @@ final class ReminderProcessingService {
             currentStatus = .failed
             lastError = error.localizedDescription
             try? modelContext.save()
+
+            if updatesLiveActivity {
+                await RecordingLiveActivityManager.showFailed(message: error.localizedDescription)
+            }
         }
 
         isProcessing = false
@@ -129,13 +137,16 @@ final class ReminderProcessingService {
                 try? modelContext.save()
                 return
             }
-            await processRecording(audioURL: url, modelContext: modelContext, retainAudio: retainAudio)
+            await processRecording(
+                audioURL: url,
+                modelContext: modelContext,
+                retainAudio: retainAudio,
+                updatesLiveActivity: false
+            )
             return
         }
 
         guard !isProcessing else { return }
-
-        ListSeeder.seedIfNeeded(modelContext: modelContext)
 
         isProcessing = true
         lastError = nil
@@ -158,24 +169,13 @@ final class ReminderProcessingService {
                 recentCorrections: AppSettings.shared.recentCorrections
             )
 
-            for item in parsed.reminders {
-                let targetList = ListSeeder.findList(named: item.list, in: lists)
-                    ?? ListSeeder.fallbackList(from: lists)
-                guard let targetList else {
-                    throw ProcessingError.noListsAvailable
-                }
-                let reminder = Reminder(
-                    title: item.title,
-                    rawTranscript: transcript,
-                    dueDate: ReminderParserService.parseDueDate(item.dueDate),
-                    priority: ReminderParserService.priorityValue(from: item.priority),
-                    audioFilePath: retainAudio ? job.audioFilePath : nil,
-                    list: targetList
-                )
-                modelContext.insert(reminder)
-                lastCreatedTitles.append(item.title)
-                await NotificationSchedulingService.schedule(for: reminder)
-            }
+            _ = await insertParsedReminders(
+                parsed.reminders,
+                transcript: transcript,
+                lists: lists,
+                retainAudioPath: retainAudio ? job.audioFilePath : nil,
+                modelContext: modelContext
+            )
 
             job.status = .done
             currentStatus = .done
@@ -191,6 +191,46 @@ final class ReminderProcessingService {
         }
 
         isProcessing = false
+    }
+
+    @MainActor
+    private func insertParsedReminders(
+        _ items: [ParsedReminder],
+        transcript: String,
+        lists: [ReminderList],
+        retainAudioPath: String?,
+        modelContext: ModelContext
+    ) async -> (firstTitle: String?, firstListName: String?, firstListIcon: String?) {
+        var firstTitle: String?
+        var firstListName: String?
+        var firstListIcon: String?
+
+        for item in items {
+            let targetList = ListSeeder.findList(named: item.list, in: lists)
+                ?? ListSeeder.fallbackList(from: lists)
+
+            guard let targetList else { continue }
+
+            let reminder = Reminder(
+                title: item.title,
+                rawTranscript: transcript,
+                dueDate: ReminderParserService.parseDueDate(item.dueDate),
+                priority: ReminderParserService.priorityValue(from: item.priority),
+                audioFilePath: retainAudioPath,
+                list: targetList
+            )
+            modelContext.insert(reminder)
+            lastCreatedTitles.append(item.title)
+            await NotificationSchedulingService.schedule(for: reminder)
+
+            if firstTitle == nil {
+                firstTitle = item.title
+                firstListName = targetList.name
+                firstListIcon = targetList.icon
+            }
+        }
+
+        return (firstTitle, firstListName, firstListIcon)
     }
 
     private func sendConfirmationNotification(titles: [String]) async {

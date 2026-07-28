@@ -24,14 +24,12 @@
 		A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* BetterRemindersShortcuts.swift */; };
 		A10000000000000000000010 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RecordingActivityAttributes.swift */; };
 		A10000000000000000000011 /* RecordingLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* RecordingLiveActivityManager.swift */; };
-		A10000000000000000000012 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* MainTabView.swift */; };
-		A10000000000000000000013 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* ListsView.swift */; };
-		A10000000000000000000014 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* ListDetailView.swift */; };
+		A10000000000000000000012 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004B /* HomeView.swift */; };
 		A10000000000000000000015 /* ReminderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* ReminderDetailView.swift */; };
-		A10000000000000000000016 /* RecordButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* RecordButtonView.swift */; };
 		A10000000000000000000017 /* ProcessingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* ProcessingOverlayView.swift */; };
-		A10000000000000000000018 /* ActionButtonSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* ActionButtonSetupView.swift */; };
 		A10000000000000000000019 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* SettingsView.swift */; };
+		A1000000000000000000004C /* FilterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004C /* FilterSheet.swift */; };
+		A1000000000000000000004D /* DevPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004D /* DevPanelView.swift */; };
 		A1000000000000000000001A /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* SharedViews.swift */; };
 		A1000000000000000000001B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001B /* Assets.xcassets */; };
 		A1000000000000000000001C /* BetterRemindersWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001C /* BetterRemindersWidgets.swift */; };
@@ -42,15 +40,35 @@
 		A10000000000000000000023 /* NotificationSchedulingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* NotificationSchedulingService.swift */; };
 		A10000000000000000000024 /* ProcessingJobCleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* ProcessingJobCleanupService.swift */; };
 		A10000000000000000000025 /* ReminderFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* ReminderFilters.swift */; };
-		A10000000000000000000026 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* TodayView.swift */; };
-		A10000000000000000000027 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* OnboardingView.swift */; };
 		A10000000000000000000028 /* AudioPlaybackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000028 /* AudioPlaybackService.swift */; };
 		A10000000000000000000029 /* AudioPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* AudioPlaybackView.swift */; };
 		A1000000000000000000002A /* TestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* TestFixtures.swift */; };
 		A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002B /* ReminderFiltersTests.swift */; };
-		A1000000000000000000002C /* ProcessingJobCleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* ProcessingJobCleanupServiceTests.swift */; };
-		A1000000000000000000002D /* ReminderParserServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* ReminderParserServiceTests.swift */; };
-		A1000000000000000000002E /* NotificationSchedulingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* NotificationSchedulingServiceTests.swift */; };
+		A1000000000000000000002C /* RecordingStopHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* RecordingStopHandler.swift */; };
+		A1000000000000000000002D /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* RecordingCoordinator.swift */; };
+		A1000000000000000000002E /* BackgroundRecordingProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002E /* BackgroundRecordingProcessor.swift */; };
+		A1000000000000000000002F /* StopRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* StopRecordingIntent.swift */; };
+		A10000000000000000000030 /* RecordingLiveActivityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000030 /* RecordingLiveActivityViews.swift */; };
+		A10000000000000000000032 /* RecordingSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* RecordingSessionStore.swift */; };
+		A10000000000000000000033 /* ProcessingJobCleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000033 /* ProcessingJobCleanupServiceTests.swift */; };
+		A10000000000000000000034 /* ReminderParserServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000034 /* ReminderParserServiceTests.swift */; };
+		A10000000000000000000035 /* NotificationSchedulingServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */; };
+		A10000000000000000000036 /* BackgroundRecordingScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* BackgroundRecordingScheduler.swift */; };
+		A10000000000000000000040 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RecordingActivityAttributes.swift */; };
+		A10000000000000000000041 /* RecordingLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* RecordingLiveActivityManager.swift */; };
+		A10000000000000000000042 /* AudioRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* AudioRecordingService.swift */; };
+		A10000000000000000000043 /* RecordingCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002D /* RecordingCoordinator.swift */; };
+		A10000000000000000000044 /* RecordingSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000022 /* RecordingSessionStore.swift */; };
+		A10000000000000000000045 /* RecordingStopHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002C /* RecordingStopHandler.swift */; };
+		A10000000000000000000046 /* PendingRecordingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000021 /* PendingRecordingStore.swift */; };
+		A10000000000000000000047 /* BackgroundRecordingScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* BackgroundRecordingScheduler.swift */; };
+		A10000000000000000000048 /* HapticHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* HapticHelper.swift */; };
+		A10000000000000000000049 /* StopRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* StopRecordingIntent.swift */; };
+		A1000000000000000000004A /* ActionButtonFlowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */; };
+		A10000000000000000000050 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
+		A10000000000000000000051 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
+		A10000000000000000000052 /* BetterRemindersCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000053 /* Reminder+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* Reminder+Notifications.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +86,20 @@
 			remoteGlobalIDString = A30000000000000000000003;
 			remoteInfo = BetterReminders;
 		};
+		A40000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A50000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A30000000000000000000008;
+			remoteInfo = BetterRemindersCore;
+		};
+		A40000000000000000000004 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A50000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A30000000000000000000008;
+			remoteInfo = BetterRemindersCore;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -80,6 +112,17 @@
 				A1000000000000000000001E /* BetterRemindersWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A60000000000000000000002 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A10000000000000000000052 /* BetterRemindersCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -102,13 +145,11 @@
 		A2000000000000000000000F /* BetterRemindersShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterRemindersShortcuts.swift; sourceTree = "<group>"; };
 		A20000000000000000000010 /* RecordingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityAttributes.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* RecordingLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingLiveActivityManager.swift; sourceTree = "<group>"; };
-		A20000000000000000000012 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		A20000000000000000000013 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
-		A20000000000000000000014 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
+		A2000000000000000000004B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A2000000000000000000004C /* FilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterSheet.swift; sourceTree = "<group>"; };
+		A2000000000000000000004D /* DevPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevPanelView.swift; sourceTree = "<group>"; };
 		A20000000000000000000015 /* ReminderDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDetailView.swift; sourceTree = "<group>"; };
-		A20000000000000000000016 /* RecordButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButtonView.swift; sourceTree = "<group>"; };
 		A20000000000000000000017 /* ProcessingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingOverlayView.swift; sourceTree = "<group>"; };
-		A20000000000000000000018 /* ActionButtonSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonSetupView.swift; sourceTree = "<group>"; };
 		A20000000000000000000019 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A2000000000000000000001A /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 		A2000000000000000000001B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -122,18 +163,26 @@
 		A20000000000000000000023 /* NotificationSchedulingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingService.swift; sourceTree = "<group>"; };
 		A20000000000000000000024 /* ProcessingJobCleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingJobCleanupService.swift; sourceTree = "<group>"; };
 		A20000000000000000000025 /* ReminderFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderFilters.swift; sourceTree = "<group>"; };
-		A20000000000000000000026 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
-		A20000000000000000000027 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A20000000000000000000028 /* AudioPlaybackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackService.swift; sourceTree = "<group>"; };
 		A20000000000000000000029 /* AudioPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackView.swift; sourceTree = "<group>"; };
 		A2000000000000000000002A /* TestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixtures.swift; sourceTree = "<group>"; };
 		A2000000000000000000002B /* ReminderFiltersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderFiltersTests.swift; sourceTree = "<group>"; };
-		A2000000000000000000002C /* ProcessingJobCleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingJobCleanupServiceTests.swift; sourceTree = "<group>"; };
-		A2000000000000000000002D /* ReminderParserServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParserServiceTests.swift; sourceTree = "<group>"; };
-		A2000000000000000000002E /* NotificationSchedulingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingServiceTests.swift; sourceTree = "<group>"; };
+		A2000000000000000000002C /* RecordingStopHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingStopHandler.swift; sourceTree = "<group>"; };
+		A2000000000000000000002D /* RecordingCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingCoordinator.swift; sourceTree = "<group>"; };
+		A2000000000000000000002E /* BackgroundRecordingProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRecordingProcessor.swift; sourceTree = "<group>"; };
+		A2000000000000000000002F /* StopRecordingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopRecordingIntent.swift; sourceTree = "<group>"; };
+		A20000000000000000000030 /* RecordingLiveActivityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingLiveActivityViews.swift; sourceTree = "<group>"; };
+		A20000000000000000000033 /* ProcessingJobCleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingJobCleanupServiceTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000034 /* ReminderParserServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParserServiceTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingServiceTests.swift; sourceTree = "<group>"; };
+		A20000000000000000000036 /* BackgroundRecordingScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRecordingScheduler.swift; sourceTree = "<group>"; };
+		A20000000000000000000037 /* Reminder+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Notifications.swift"; sourceTree = "<group>"; };
+		A20000000000000000000038 /* BetterRemindersCore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BetterRemindersCore.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonFlowCoordinator.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* BetterReminders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterReminders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* BetterRemindersWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BetterRemindersWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000005 /* BetterRemindersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterRemindersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000000000000000000007 /* BetterRemindersCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BetterRemindersCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +190,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000050 /* BetterRemindersCore.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -148,10 +198,18 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000051 /* BetterRemindersCore.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A70000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A70000000000000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -165,6 +223,7 @@
 			isa = PBXGroup;
 			children = (
 				A80000000000000000000002 /* BetterReminders */,
+				A8000000000000000000000D /* BetterRemindersCore */,
 				A80000000000000000000003 /* BetterRemindersWidgets */,
 				A8000000000000000000000C /* BetterRemindersTests */,
 				A80000000000000000000004 /* Products */,
@@ -178,7 +237,6 @@
 				A80000000000000000000006 /* Models */,
 				A80000000000000000000007 /* Services */,
 				A80000000000000000000008 /* Intents */,
-				A80000000000000000000009 /* LiveActivity */,
 				A8000000000000000000000A /* Views */,
 				A8000000000000000000000B /* Utilities */,
 				A2000000000000000000001B /* Assets.xcassets */,
@@ -188,10 +246,30 @@
 			path = BetterReminders;
 			sourceTree = "<group>";
 		};
+		A8000000000000000000000D /* BetterRemindersCore */ = {
+			isa = PBXGroup;
+			children = (
+				A20000000000000000000010 /* RecordingActivityAttributes.swift */,
+				A20000000000000000000011 /* RecordingLiveActivityManager.swift */,
+				A2000000000000000000000A /* AudioRecordingService.swift */,
+				A2000000000000000000002D /* RecordingCoordinator.swift */,
+				A20000000000000000000022 /* RecordingSessionStore.swift */,
+				A2000000000000000000002C /* RecordingStopHandler.swift */,
+				A20000000000000000000021 /* PendingRecordingStore.swift */,
+				A20000000000000000000036 /* BackgroundRecordingScheduler.swift */,
+				A20000000000000000000007 /* HapticHelper.swift */,
+				A2000000000000000000002F /* StopRecordingIntent.swift */,
+				A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */,
+				A20000000000000000000038 /* BetterRemindersCore.entitlements */,
+			);
+			path = BetterRemindersCore;
+			sourceTree = "<group>";
+		};
 		A80000000000000000000003 /* BetterRemindersWidgets */ = {
 			isa = PBXGroup;
 			children = (
 				A2000000000000000000001C /* BetterRemindersWidgets.swift */,
+				A20000000000000000000030 /* RecordingLiveActivityViews.swift */,
 				A2000000000000000000001F /* Info.plist */,
 				A20000000000000000000020 /* BetterRemindersWidgets.entitlements */,
 			);
@@ -202,6 +280,7 @@
 			isa = PBXGroup;
 			children = (
 				A30000000000000000000001 /* BetterReminders.app */,
+				A30000000000000000000007 /* BetterRemindersCore.framework */,
 				A30000000000000000000002 /* BetterRemindersWidgets.appex */,
 				A30000000000000000000005 /* BetterRemindersTests.xctest */,
 			);
@@ -222,6 +301,7 @@
 				A20000000000000000000002 /* JobStatus.swift */,
 				A20000000000000000000003 /* ReminderList.swift */,
 				A20000000000000000000004 /* Reminder.swift */,
+				A20000000000000000000037 /* Reminder+Notifications.swift */,
 				A20000000000000000000005 /* ProcessingJob.swift */,
 			);
 			path = Models;
@@ -232,15 +312,13 @@
 			children = (
 				A20000000000000000000008 /* AppSettings.swift */,
 				A20000000000000000000009 /* ListSeeder.swift */,
-				A2000000000000000000000A /* AudioRecordingService.swift */,
 				A20000000000000000000028 /* AudioPlaybackService.swift */,
 				A2000000000000000000000B /* SpeechService.swift */,
 				A2000000000000000000000C /* ReminderParserService.swift */,
 				A2000000000000000000000D /* ReminderProcessingService.swift */,
 				A20000000000000000000023 /* NotificationSchedulingService.swift */,
 				A20000000000000000000024 /* ProcessingJobCleanupService.swift */,
-				A20000000000000000000021 /* PendingRecordingStore.swift */,
-				A20000000000000000000022 /* RecordingSessionStore.swift */,
+				A2000000000000000000002E /* BackgroundRecordingProcessor.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -254,28 +332,15 @@
 			path = Intents;
 			sourceTree = "<group>";
 		};
-		A80000000000000000000009 /* LiveActivity */ = {
-			isa = PBXGroup;
-			children = (
-				A20000000000000000000010 /* RecordingActivityAttributes.swift */,
-				A20000000000000000000011 /* RecordingLiveActivityManager.swift */,
-			);
-			path = LiveActivity;
-			sourceTree = "<group>";
-		};
 		A8000000000000000000000A /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000012 /* MainTabView.swift */,
-				A20000000000000000000026 /* TodayView.swift */,
-				A20000000000000000000013 /* ListsView.swift */,
-				A20000000000000000000014 /* ListDetailView.swift */,
+				A2000000000000000000004B /* HomeView.swift */,
 				A20000000000000000000015 /* ReminderDetailView.swift */,
-				A20000000000000000000016 /* RecordButtonView.swift */,
 				A20000000000000000000017 /* ProcessingOverlayView.swift */,
-				A20000000000000000000018 /* ActionButtonSetupView.swift */,
 				A20000000000000000000019 /* SettingsView.swift */,
-				A20000000000000000000027 /* OnboardingView.swift */,
+				A2000000000000000000004C /* FilterSheet.swift */,
+				A2000000000000000000004D /* DevPanelView.swift */,
 				A20000000000000000000029 /* AudioPlaybackView.swift */,
 				A2000000000000000000001A /* SharedViews.swift */,
 			);
@@ -286,7 +351,6 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000006 /* KeychainHelper.swift */,
-				A20000000000000000000007 /* HapticHelper.swift */,
 				A20000000000000000000025 /* ReminderFilters.swift */,
 			);
 			path = Utilities;
@@ -297,9 +361,9 @@
 			children = (
 				A2000000000000000000002A /* TestFixtures.swift */,
 				A2000000000000000000002B /* ReminderFiltersTests.swift */,
-				A2000000000000000000002C /* ProcessingJobCleanupServiceTests.swift */,
-				A2000000000000000000002D /* ReminderParserServiceTests.swift */,
-				A2000000000000000000002E /* NotificationSchedulingServiceTests.swift */,
+				A20000000000000000000033 /* ProcessingJobCleanupServiceTests.swift */,
+				A20000000000000000000034 /* ReminderParserServiceTests.swift */,
+				A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */,
 			);
 			path = BetterRemindersTests;
 			sourceTree = "<group>";
@@ -314,11 +378,13 @@
 				AA0000000000000000000001 /* Sources */,
 				A70000000000000000000001 /* Frameworks */,
 				AA0000000000000000000002 /* Resources */,
+				A60000000000000000000002 /* Embed Frameworks */,
 				A60000000000000000000001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				AA0000000000000000000008 /* PBXTargetDependency */,
 				AA0000000000000000000005 /* PBXTargetDependency */,
 			);
 			name = BetterReminders;
@@ -337,6 +403,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				AA0000000000000000000009 /* PBXTargetDependency */,
 			);
 			name = BetterRemindersWidgets;
 			productName = BetterRemindersWidgets;
@@ -360,6 +427,22 @@
 			productReference = A30000000000000000000005 /* BetterRemindersTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		A30000000000000000000008 /* BetterRemindersCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A90000000000000000000006 /* Build configuration list for PBXNativeTarget "BetterRemindersCore" */;
+			buildPhases = (
+				AA000000000000000000000B /* Sources */,
+				A70000000000000000000004 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BetterRemindersCore;
+			productName = BetterRemindersCore;
+			productReference = A30000000000000000000007 /* BetterRemindersCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -380,6 +463,9 @@
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = A30000000000000000000003;
 					};
+					A30000000000000000000008 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 				};
 			};
 			buildConfigurationList = A90000000000000000000001 /* Build configuration list for PBXProject "BetterReminders" */;
@@ -396,6 +482,7 @@
 			projectRoot = "";
 			targets = (
 				A30000000000000000000003 /* BetterReminders */,
+				A30000000000000000000008 /* BetterRemindersCore */,
 				A30000000000000000000004 /* BetterRemindersWidgets */,
 				A30000000000000000000006 /* BetterRemindersTests */,
 			);
@@ -429,35 +516,27 @@
 				A10000000000000000000002 /* JobStatus.swift in Sources */,
 				A10000000000000000000003 /* ReminderList.swift in Sources */,
 				A10000000000000000000004 /* Reminder.swift in Sources */,
+				A10000000000000000000053 /* Reminder+Notifications.swift in Sources */,
 				A10000000000000000000005 /* ProcessingJob.swift in Sources */,
 				A10000000000000000000006 /* KeychainHelper.swift in Sources */,
-				A10000000000000000000007 /* HapticHelper.swift in Sources */,
 				A10000000000000000000025 /* ReminderFilters.swift in Sources */,
 				A10000000000000000000008 /* AppSettings.swift in Sources */,
 				A10000000000000000000009 /* ListSeeder.swift in Sources */,
-				A1000000000000000000000A /* AudioRecordingService.swift in Sources */,
 				A10000000000000000000028 /* AudioPlaybackService.swift in Sources */,
 				A1000000000000000000000B /* SpeechService.swift in Sources */,
 				A1000000000000000000000C /* ReminderParserService.swift in Sources */,
 				A1000000000000000000000D /* ReminderProcessingService.swift in Sources */,
 				A10000000000000000000023 /* NotificationSchedulingService.swift in Sources */,
 				A10000000000000000000024 /* ProcessingJobCleanupService.swift in Sources */,
-				A1000000000000000000001F /* PendingRecordingStore.swift in Sources */,
-				A10000000000000000000020 /* RecordingSessionStore.swift in Sources */,
+				A1000000000000000000002E /* BackgroundRecordingProcessor.swift in Sources */,
 				A1000000000000000000000E /* ToggleRecordingIntent.swift in Sources */,
 				A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */,
-				A10000000000000000000010 /* RecordingActivityAttributes.swift in Sources */,
-				A10000000000000000000011 /* RecordingLiveActivityManager.swift in Sources */,
-				A10000000000000000000012 /* MainTabView.swift in Sources */,
-				A10000000000000000000026 /* TodayView.swift in Sources */,
-				A10000000000000000000013 /* ListsView.swift in Sources */,
-				A10000000000000000000014 /* ListDetailView.swift in Sources */,
+				A10000000000000000000012 /* HomeView.swift in Sources */,
 				A10000000000000000000015 /* ReminderDetailView.swift in Sources */,
-				A10000000000000000000016 /* RecordButtonView.swift in Sources */,
 				A10000000000000000000017 /* ProcessingOverlayView.swift in Sources */,
-				A10000000000000000000018 /* ActionButtonSetupView.swift in Sources */,
 				A10000000000000000000019 /* SettingsView.swift in Sources */,
-				A10000000000000000000027 /* OnboardingView.swift in Sources */,
+				A1000000000000000000004C /* FilterSheet.swift in Sources */,
+				A1000000000000000000004D /* DevPanelView.swift in Sources */,
 				A10000000000000000000029 /* AudioPlaybackView.swift in Sources */,
 				A1000000000000000000001A /* SharedViews.swift in Sources */,
 			);
@@ -468,7 +547,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000000000000000000001C /* BetterRemindersWidgets.swift in Sources */,
-				A1000000000000000000001D /* RecordingActivityAttributes.swift in Sources */,
+				A10000000000000000000030 /* RecordingLiveActivityViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,9 +557,27 @@
 			files = (
 				A1000000000000000000002A /* TestFixtures.swift in Sources */,
 				A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */,
-				A1000000000000000000002C /* ProcessingJobCleanupServiceTests.swift in Sources */,
-				A1000000000000000000002D /* ReminderParserServiceTests.swift in Sources */,
-				A1000000000000000000002E /* NotificationSchedulingServiceTests.swift in Sources */,
+				A10000000000000000000033 /* ProcessingJobCleanupServiceTests.swift in Sources */,
+				A10000000000000000000034 /* ReminderParserServiceTests.swift in Sources */,
+				A10000000000000000000035 /* NotificationSchedulingServiceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000000000000000000000B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000040 /* RecordingActivityAttributes.swift in Sources */,
+				A10000000000000000000041 /* RecordingLiveActivityManager.swift in Sources */,
+				A10000000000000000000042 /* AudioRecordingService.swift in Sources */,
+				A10000000000000000000043 /* RecordingCoordinator.swift in Sources */,
+				A10000000000000000000044 /* RecordingSessionStore.swift in Sources */,
+				A10000000000000000000045 /* RecordingStopHandler.swift in Sources */,
+				A10000000000000000000046 /* PendingRecordingStore.swift in Sources */,
+				A10000000000000000000047 /* BackgroundRecordingScheduler.swift in Sources */,
+				A10000000000000000000048 /* HapticHelper.swift in Sources */,
+				A10000000000000000000049 /* StopRecordingIntent.swift in Sources */,
+				A1000000000000000000004A /* ActionButtonFlowCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -496,6 +593,16 @@
 			isa = PBXTargetDependency;
 			target = A30000000000000000000003 /* BetterReminders */;
 			targetProxy = A40000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A30000000000000000000008 /* BetterRemindersCore */;
+			targetProxy = A40000000000000000000003 /* PBXContainerItemProxy */;
+		};
+		AA0000000000000000000009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A30000000000000000000008 /* BetterRemindersCore */;
+			targetProxy = A40000000000000000000004 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -690,6 +797,66 @@
 			};
 			name = Release;
 		};
+		AB0000000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BetterRemindersCore/BetterRemindersCore.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 59T6929373;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.betterreminders.app.core;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		AB000000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = BetterRemindersCore/BetterRemindersCore.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 59T6929373;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.betterreminders.app.core;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -725,6 +892,15 @@
 			buildConfigurations = (
 				AB0000000000000000000007 /* Debug */,
 				AB0000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A90000000000000000000006 /* Build configuration list for PBXNativeTarget "BetterRemindersCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0000000000000000000009 /* Debug */,
+				AB000000000000000000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

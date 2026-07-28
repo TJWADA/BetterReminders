@@ -1,0 +1,47 @@
+import BackgroundTasks
+import Foundation
+import SwiftData
+import BetterRemindersCore
+
+enum BackgroundRecordingProcessor {
+    static func register() {
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: BackgroundRecordingScheduler.taskIdentifier,
+            using: nil
+        ) { task in
+            guard let processingTask = task as? BGProcessingTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            handle(processingTask)
+        }
+    }
+
+    @MainActor
+    static func processAllPending() async {
+        guard let container = try? ModelContainer(
+            for: Reminder.self, ReminderList.self, ProcessingJob.self
+        ) else { return }
+
+        while let url = PendingRecordingStore.dequeue() {
+            await ReminderProcessingService.shared.processRecording(
+                audioURL: url,
+                modelContext: container.mainContext,
+                retainAudio: AppSettings.shared.retainAudio,
+                updatesLiveActivity: false
+            )
+        }
+        ProcessingJobCleanupService.cleanup(modelContext: container.mainContext)
+    }
+
+    private static func handle(_ task: BGProcessingTask) {
+        task.expirationHandler = {
+            task.setTaskCompleted(success: false)
+        }
+
+        Task { @MainActor in
+            await processAllPending()
+            task.setTaskCompleted(success: true)
+        }
+    }
+}
