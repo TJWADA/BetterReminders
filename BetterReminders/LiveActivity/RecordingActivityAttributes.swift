@@ -33,4 +33,5 @@ struct RecordingActivityAttributes: ActivityAttributes {
     }
 
     var sessionID: String
+    var recordingStartDate: Date
 }

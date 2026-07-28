@@ -3,11 +3,9 @@ import Foundation
 import SwiftData
 
 enum BackgroundRecordingProcessor {
-    static let taskIdentifier = "com.betterreminders.app.processRecording"
-
     static func register() {
         BGTaskScheduler.shared.register(
-            forTaskWithIdentifier: taskIdentifier,
+            forTaskWithIdentifier: BackgroundRecordingScheduler.taskIdentifier,
             using: nil
         ) { task in
             guard let processingTask = task as? BGProcessingTask else {
@@ -19,10 +17,7 @@ enum BackgroundRecordingProcessor {
     }
 
     static func scheduleProcessing() {
-        let request = BGProcessingTaskRequest(identifier: taskIdentifier)
-        request.requiresNetworkConnectivity = true
-        request.requiresExternalPower = false
-        try? BGTaskScheduler.shared.submit(request)
+        BackgroundRecordingScheduler.scheduleProcessing()
     }
 
     @MainActor

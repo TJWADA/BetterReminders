@@ -3,71 +3,110 @@ import SwiftUI
 import WidgetKit
 
 struct RecordingLiveActivityViews {
+    // MARK: - Lock Screen (minimal fallback)
+
     @ViewBuilder
-    static func lockScreenContent(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                phaseIcon(context: context, size: .title2)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(context.state.statusMessage)
-                        .font(.headline)
-                    phaseSubtitle(context: context)
+    static func lockScreenCompact(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
+        HStack(spacing: 8) {
+            phaseIcon(context: context, size: .body)
+            Text(lockScreenMessage(context: context))
+                .font(.subheadline)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+
+    private static func lockScreenMessage(context: ActivityViewContext<RecordingActivityAttributes>) -> String {
+        switch context.state.phase {
+        case .completed:
+            return "Reminder saved"
+        case .failed:
+            return context.state.statusMessage
+        default:
+            return context.state.statusMessage
+        }
+    }
+
+    // MARK: - Dynamic Island Expanded
+
+    @ViewBuilder
+    static func expandedBottom(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
+        switch context.state.phase {
+        case .recording:
+            VStack(spacing: 10) {
+                HStack {
+                    recordingMeter(context: context)
+                    Spacer()
+                    recordingTimer(context: context)
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
                 }
-                Spacer()
-            }
-
-            phaseBody(context: context)
-
-            if context.state.phase == .recording {
-                Button(intent: StopRecordingWidgetIntent()) {
-                    Label("Stop", systemImage: "stop.fill")
-                        .font(.headline)
+                Button(intent: StopRecordingIntent()) {
+                    Label("Stop Recording", systemImage: "stop.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
-            }
-        }
-        .padding()
-    }
-
-    @ViewBuilder
-    static func phaseBody(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
-        switch context.state.phase {
-        case .recording:
-            VStack(alignment: .leading, spacing: 8) {
-                AudioLevelBarsView(level: context.state.audioLevel)
-                Text(formatElapsed(context.state.elapsedSeconds))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
             }
         case .transcribing, .parsing:
             ProgressView()
                 .progressViewStyle(.linear)
         case .completed:
             if let title = context.state.resultTitle {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(title)
-                        .font(.subheadline.bold())
-                }
-                if let listName = context.state.resultListName {
-                    ListResultBadge(name: listName, icon: context.state.resultListIcon ?? "folder.fill")
+                VStack(spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text(title)
+                            .font(.caption.bold())
+                            .lineLimit(2)
+                    }
+                    if let listName = context.state.resultListName {
+                        ListResultBadge(
+                            name: listName,
+                            icon: context.state.resultListIcon ?? "folder.fill"
+                        )
+                    }
                 }
             }
         case .failed:
-            EmptyView()
+            Text(context.state.statusMessage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(3)
         }
     }
+
+    @ViewBuilder
+    static func recordingMeter(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
+        if context.state.audioLevel > 0.05 {
+            AudioLevelBarsView(level: context.state.audioLevel)
+        } else {
+            Image(systemName: "mic.fill")
+                .font(.title3)
+                .foregroundStyle(.red)
+                .symbolEffect(.pulse, options: .repeating)
+        }
+    }
+
+    @ViewBuilder
+    static func recordingTimer(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
+        Text(timerInterval: context.attributes.recordingStartDate...Date.distantFuture, countsDown: false)
+    }
+
+    // MARK: - Compact / Minimal
 
     @ViewBuilder
     static func compactTrailing(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
         switch context.state.phase {
         case .recording:
             HStack(spacing: 4) {
-                MiniLevelBarsView(level: context.state.audioLevel)
-                Text(formatElapsed(context.state.elapsedSeconds))
+                if context.state.audioLevel > 0.05 {
+                    MiniLevelBarsView(level: context.state.audioLevel)
+                }
+                recordingTimer(context: context)
                     .font(.caption2.monospacedDigit())
             }
         case .transcribing, .parsing:
@@ -82,6 +121,29 @@ struct RecordingLiveActivityViews {
                 Image(systemName: "checkmark")
                     .foregroundStyle(.green)
             }
+        case .failed:
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+        }
+    }
+
+    @ViewBuilder
+    static func minimalIcon(context: ActivityViewContext<RecordingActivityAttributes>) -> some View {
+        switch context.state.phase {
+        case .recording:
+            Image(systemName: "mic.fill")
+                .foregroundStyle(.red)
+        case .transcribing:
+            Image(systemName: "waveform")
+                .foregroundStyle(.blue)
+                .symbolEffect(.variableColor.iterative, options: .repeating)
+        case .parsing:
+            Image(systemName: "sparkles")
+                .foregroundStyle(.purple)
+                .symbolEffect(.pulse, options: .repeating)
+        case .completed:
+            Image(systemName: "checkmark")
+                .foregroundStyle(.green)
         case .failed:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
@@ -122,31 +184,25 @@ struct RecordingLiveActivityViews {
         switch context.state.phase {
         case .recording:
             Text("BetterReminders")
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         case .transcribing:
             Text("On-device transcription")
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         case .parsing:
             Text("Finding the right list")
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         case .completed:
             Text("Reminder saved")
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         case .failed:
             Text("Tap to open BetterReminders")
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-    }
-
-    static func formatElapsed(_ seconds: Int) -> String {
-        let mins = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%d:%02d", mins, secs)
     }
 }
 

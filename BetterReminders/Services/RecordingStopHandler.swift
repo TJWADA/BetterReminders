@@ -21,7 +21,7 @@ enum RecordingStopHandler {
         await RecordingCoordinator.shared.stopMeterTimer()
         await RecordingLiveActivityManager.showTranscribing()
         PendingRecordingStore.enqueue(url)
-        BackgroundRecordingProcessor.scheduleProcessing()
+        BackgroundRecordingScheduler.scheduleProcessing()
         await RecordingCoordinator.shared.handleStoppedRecording(at: url)
     }
 

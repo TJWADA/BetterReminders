@@ -25,7 +25,10 @@ enum RecordingLiveActivityManager {
         }
         await endImmediate()
 
-        let attributes = RecordingActivityAttributes(sessionID: sessionID)
+        let attributes = RecordingActivityAttributes(
+            sessionID: sessionID,
+            recordingStartDate: Date()
+        )
         let state = RecordingActivityAttributes.ContentState.recording
 
         do {
