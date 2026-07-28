@@ -68,7 +68,7 @@
 		A10000000000000000000047 /* BackgroundRecordingScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000036 /* BackgroundRecordingScheduler.swift */; };
 		A10000000000000000000048 /* HapticHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* HapticHelper.swift */; };
 		A10000000000000000000049 /* StopRecordingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002F /* StopRecordingIntent.swift */; };
-		A1000000000000000000004A /* ActionButtonRecordingBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* ActionButtonRecordingBootstrap.swift */; };
+		A1000000000000000000004A /* ActionButtonFlowCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */; };
 		A10000000000000000000050 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
 		A10000000000000000000051 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
 		A10000000000000000000052 /* BetterRemindersCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -186,7 +186,7 @@
 		A20000000000000000000036 /* BackgroundRecordingScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRecordingScheduler.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* Reminder+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Notifications.swift"; sourceTree = "<group>"; };
 		A20000000000000000000038 /* BetterRemindersCore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BetterRemindersCore.entitlements; sourceTree = "<group>"; };
-		A20000000000000000000039 /* ActionButtonRecordingBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonRecordingBootstrap.swift; sourceTree = "<group>"; };
+		A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonFlowCoordinator.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* BetterReminders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterReminders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* BetterRemindersWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BetterRemindersWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000005 /* BetterRemindersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterRemindersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -267,7 +267,7 @@
 				A20000000000000000000036 /* BackgroundRecordingScheduler.swift */,
 				A20000000000000000000007 /* HapticHelper.swift */,
 				A2000000000000000000002F /* StopRecordingIntent.swift */,
-				A20000000000000000000039 /* ActionButtonRecordingBootstrap.swift */,
+				A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */,
 				A20000000000000000000038 /* BetterRemindersCore.entitlements */,
 			);
 			path = BetterRemindersCore;
@@ -593,7 +593,7 @@
 				A10000000000000000000047 /* BackgroundRecordingScheduler.swift in Sources */,
 				A10000000000000000000048 /* HapticHelper.swift in Sources */,
 				A10000000000000000000049 /* StopRecordingIntent.swift in Sources */,
-				A1000000000000000000004A /* ActionButtonRecordingBootstrap.swift in Sources */,
+				A1000000000000000000004A /* ActionButtonFlowCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

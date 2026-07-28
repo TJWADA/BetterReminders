@@ -7,7 +7,7 @@ struct BetterRemindersShortcuts: AppShortcutsProvider {
             phrases: [
                 "Toggle recording in \(.applicationName)",
                 "Record reminder in \(.applicationName)",
-                "Start recording in \(.applicationName)",
+                "Open and record in \(.applicationName)",
             ],
             shortTitle: "Toggle Recording",
             systemImageName: "mic.fill"

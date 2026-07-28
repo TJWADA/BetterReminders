@@ -28,7 +28,7 @@ enum BackgroundRecordingProcessor {
                 audioURL: url,
                 modelContext: container.mainContext,
                 retainAudio: AppSettings.shared.retainAudio,
-                updatesLiveActivity: true
+                updatesLiveActivity: false
             )
         }
         ProcessingJobCleanupService.cleanup(modelContext: container.mainContext)

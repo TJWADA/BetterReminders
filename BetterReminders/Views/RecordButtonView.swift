@@ -6,13 +6,14 @@ struct RecordButtonView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ProcessingJob.createdAt, order: .reverse) private var jobs: [ProcessingJob]
 
-    @State private var recorder = AudioRecordingService.shared
+    @Bindable private var recorder = AudioRecordingService.shared
     @State private var processor = ReminderProcessingService.shared
     @State private var displayTick = 0
     @State private var displayTimer: Timer?
     @State private var permissionDenied = false
     @State private var showSuccess = false
     @State private var recordingError: String?
+    @State private var isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
 
     var body: some View {
         NavigationStack {
@@ -31,6 +32,25 @@ struct RecordButtonView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Enable microphone and speech recognition in Settings to record reminders.")
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .actionButtonArmedStateChanged)) { _ in
+                isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingStarted)) { _ in
+                isActionButtonArmed = false
+                startDisplayTimer()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingStopped)) { notification in
+                isActionButtonArmed = false
+                stopDisplayTimer()
+                guard let url = notification.userInfo?["audioURL"] as? URL else { return }
+                Task { await processRecording(at: url) }
+            }
+            .onAppear {
+                isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
+                if recorder.isRecording {
+                    startDisplayTimer()
+                }
             }
         }
     }
@@ -65,11 +85,15 @@ struct RecordButtonView: View {
                     .font(.title2.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .id(displayTick)
-                Text("Tap to stop recording")
+                Text("Press Action Button or tap to stop")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            } else if isActionButtonArmed {
+                Text("Press Action Button to start recording")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                Text("Tap to record a reminder")
+                Text("Tap or use Action Button to record")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -166,6 +190,8 @@ struct RecordButtonView: View {
     private func toggleRecording() async {
         showSuccess = false
         recordingError = nil
+        RecordingSessionStore.setActionButtonArmed(false)
+        isActionButtonArmed = false
 
         if KeychainHelper.loadAPIKey()?.isEmpty ?? true {
             recordingError = "OpenAI API key not configured. Add it in Settings first."
@@ -191,16 +217,12 @@ struct RecordButtonView: View {
             if recorder.isRecording {
                 HapticHelper.recordingStopped()
                 guard let url = recorder.stopRecording() else { return }
-                await RecordingCoordinator.shared.stopMeterTimer()
                 stopDisplayTimer()
-                await RecordingLiveActivityManager.showTranscribing()
                 await processRecording(at: url)
             } else {
                 HapticHelper.recordingStarted()
-                try await RecordingLiveActivityManager.start()
                 _ = try recorder.startRecording()
                 startDisplayTimer()
-                await RecordingCoordinator.shared.startMeterTimer()
             }
         } catch {
             recordingError = error.localizedDescription
@@ -212,8 +234,7 @@ struct RecordButtonView: View {
         await processor.processRecording(
             audioURL: url,
             modelContext: modelContext,
-            retainAudio: AppSettings.shared.retainAudio,
-            updatesLiveActivity: true
+            retainAudio: AppSettings.shared.retainAudio
         )
         if processor.currentStatus == .done {
             HapticHelper.notification(.success)

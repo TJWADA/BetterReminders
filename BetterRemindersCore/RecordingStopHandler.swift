@@ -11,15 +11,9 @@ public enum RecordingStopHandler {
         }
 
         guard recordingFileIsUsable(at: url) else {
-            await RecordingCoordinator.shared.stopMeterTimer()
-            await RecordingLiveActivityManager.showFailed(
-                message: "Recording was too short. Speak clearly, then stop."
-            )
             throw RecordingStopError.recordingTooShort
         }
 
-        await RecordingCoordinator.shared.stopMeterTimer()
-        await RecordingLiveActivityManager.showTranscribing()
         PendingRecordingStore.enqueue(url)
         BackgroundRecordingScheduler.scheduleProcessing()
         await RecordingCoordinator.shared.handleStoppedRecording(at: url)

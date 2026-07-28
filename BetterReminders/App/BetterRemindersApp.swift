@@ -26,7 +26,6 @@ struct BetterRemindersApp: App {
                         ListSeeder.seedIfNeeded(modelContext: modelContainer.mainContext)
                         await syncNotificationsAndCleanup()
                         await processPendingRecordings()
-                        await ActionButtonRecordingBootstrap.completePendingStartIfNeeded()
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .recordingDidFinish)) { _ in
@@ -37,7 +36,6 @@ struct BetterRemindersApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         Task {
-                            await ActionButtonRecordingBootstrap.completePendingStartIfNeeded()
                             await syncNotificationsAndCleanup()
                             await processPendingRecordings()
                         }

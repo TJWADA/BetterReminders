@@ -19,7 +19,7 @@ final class ReminderProcessingService {
         audioURL: URL,
         modelContext: ModelContext,
         retainAudio: Bool,
-        updatesLiveActivity: Bool = true
+        updatesLiveActivity: Bool = false
     ) async {
         guard !isProcessing else { return }
 
