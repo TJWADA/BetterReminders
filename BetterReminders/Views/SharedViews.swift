@@ -81,6 +81,19 @@ private enum ListTileMetrics {
     static let iconSize: CGFloat = 18
 }
 
+struct ListTileIcon: View {
+    let icon: String
+    let colorHex: String
+
+    private var theme: ListColorTheme { ListColorTheme(colorHex: colorHex) }
+
+    var body: some View {
+        Image(systemName: icon)
+            .font(.system(size: ListTileMetrics.iconSize, weight: .medium))
+            .foregroundStyle(theme.iconGradient)
+    }
+}
+
 struct ListHeaderIcon: View {
     let icon: String
     let colorHex: String
@@ -133,9 +146,7 @@ struct ListIconTile: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
-                    Image(systemName: icon)
-                        .font(.system(size: ListTileMetrics.iconSize, weight: .medium))
-                        .foregroundStyle(theme.iconGradient)
+                    ListTileIcon(icon: icon, colorHex: colorHex)
                     Spacer(minLength: 4)
                     Text("\(incompleteCount)")
                         .font(.system(size: 22, weight: .semibold, design: .rounded))
@@ -158,6 +169,15 @@ struct ListIconTile: View {
     }
 }
 
+struct EmptyListGridCell: View {
+    var body: some View {
+        Color.clear
+            .aspectRatio(ListTileMetrics.aspectRatio, contentMode: .fit)
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
+    }
+}
+
 struct AddListTile: View {
     var body: some View {
         Image(systemName: "plus")
@@ -172,6 +192,7 @@ struct AddListTile: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(Color.secondary.opacity(0.12), lineWidth: 0.5)
             }
+            .padding(ListTileMetrics.padding)
     }
 }
 

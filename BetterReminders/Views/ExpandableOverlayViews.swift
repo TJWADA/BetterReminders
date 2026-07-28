@@ -141,7 +141,10 @@ struct GlobalTaskSearchOverlay: View {
             }
         }
         .onAppear {
-            searchFocused = true
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(350))
+                searchFocused = true
+            }
             withAnimation(.spring(response: 0.4, dampingFraction: 0.82).delay(0.12)) {
                 contentVisible = true
             }

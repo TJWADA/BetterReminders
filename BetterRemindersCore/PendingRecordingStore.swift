@@ -2,7 +2,7 @@ import Foundation
 
 public enum PendingRecordingStore {
     private static let key = "pendingRecordingURL"
-    private static let defaults = UserDefaults(suiteName: "group.com.betterreminders.shared") ?? .standard
+    private static let defaults = SharedUserDefaults.store
 
     public static func enqueue(_ url: URL) {
         defaults.set(url.path, forKey: key)

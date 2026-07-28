@@ -26,52 +26,31 @@ struct HomeView: View {
     @Namespace private var recordingNamespace
     @Namespace private var searchNamespace
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-    ]
+    @State private var navigationPath = NavigationPath()
+
+    @State private var listGridID = UUID()
+
+    private let gridSpacing: CGFloat = 12
 
     private let fadeExtension: CGFloat = 48
 
     @State private var safeAreaTop: CGFloat = 59
     @State private var safeAreaBottom: CGFloat = 34
 
+    private let cornerPadding: CGFloat = 20
+
     private var displayedLists: [ReminderList] {
         lists
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(displayedLists) { list in
-                            NavigationLink(value: list) {
-                                ListIconTile(list: list)
-                                    .matchedTransitionSource(id: list.id, in: listTransitionNamespace)
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                Button {
-                                    editingList = list
-                                } label: {
-                                    Label("Edit List", systemImage: "pencil")
-                                }
-                            }
-                        }
-
-                        if !showingTaskSearch {
-                            Button {
-                                showingNewList = true
-                            } label: {
-                                AddListTile()
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    listGrid
+                        .id(listGridID)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                 }
                 .scrollClipDisabled()
                 .safeAreaInset(edge: .top, spacing: 0) {
@@ -92,19 +71,24 @@ struct HomeView: View {
                 .allowsHitTesting(false)
 
                 VStack(spacing: 0) {
-                    topActionBar
-                    Spacer(minLength: 0)
-                    bottomActionBar
+                    cornerActionButtons
                 }
             }
             .onGeometryChange(for: EdgeInsets.self, of: { $0.safeAreaInsets }) { insets in
-                safeAreaTop = insets.top
-                safeAreaBottom = insets.bottom
+                if insets.top != safeAreaTop {
+                    safeAreaTop = insets.top
+                }
+                if insets.bottom != safeAreaBottom {
+                    safeAreaBottom = insets.bottom
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ReminderList.self) { list in
                 ListDetailView(list: list)
                     .navigationTransition(.zoom(sourceID: list.id, in: listTransitionNamespace))
+                    .onDisappear {
+                        listGridID = UUID()
+                    }
             }
             .overlay {
                 if recorder.isRecording {
@@ -140,7 +124,9 @@ struct HomeView: View {
             ListEditView()
         }
         .sheet(item: $editingList) { list in
-            ListEditView(list: list)
+            ListEditCompactView(list: list)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
         .alert("Microphone Access Required", isPresented: $permissionDenied) {
             Button("OK", role: .cancel) {}
@@ -174,58 +160,122 @@ struct HomeView: View {
         }
     }
 
-    private var topActionBar: some View {
-        HStack {
-            CornerActionButton(icon: "ladybug.fill", color: .orange) {
-                showingDevPanel = true
+    private var listGrid: some View {
+        VStack(spacing: gridSpacing) {
+            ForEach(0..<(displayedLists.count / 2), id: \.self) { row in
+                HStack(alignment: .top, spacing: gridSpacing) {
+                    listTile(at: row * 2)
+                        .frame(maxWidth: .infinity)
+                    listTile(at: row * 2 + 1)
+                        .frame(maxWidth: .infinity)
+                }
             }
-            Spacer()
-            CornerActionButton(icon: "gearshape.fill") {
-                showingSettings = true
+
+            if !showingTaskSearch {
+                if displayedLists.count.isMultiple(of: 2) == false, !displayedLists.isEmpty {
+                    HStack(alignment: .top, spacing: gridSpacing) {
+                        listTile(for: displayedLists[displayedLists.count - 1])
+                            .frame(maxWidth: .infinity)
+                        EmptyListGridCell()
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+
+                HStack(alignment: .top, spacing: gridSpacing) {
+                    addListTileButton
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    EmptyListGridCell()
+                        .frame(maxWidth: .infinity)
+                }
+            } else if displayedLists.count.isMultiple(of: 2) == false, !displayedLists.isEmpty {
+                HStack(alignment: .top, spacing: gridSpacing) {
+                    listTile(for: displayedLists[displayedLists.count - 1])
+                        .frame(maxWidth: .infinity)
+                    EmptyListGridCell()
+                        .frame(maxWidth: .infinity)
+                }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 
-    private var bottomActionBar: some View {
+    private func listTile(at index: Int) -> some View {
+        listTile(for: displayedLists[index])
+    }
+
+    private func listTile(for list: ReminderList) -> some View {
+        Button {
+            navigationPath.append(list)
+        } label: {
+            ListIconTile(list: list)
+                .matchedTransitionSource(id: list.id, in: listTransitionNamespace)
+        }
+        .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0.4) {
+            HapticHelper.selection()
+            editingList = list
+        }
+    }
+
+    private var addListTileButton: some View {
+        Button {
+            showingNewList = true
+        } label: {
+            AddListTile()
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var cornerActionButtons: some View {
         VStack(spacing: 0) {
-            if !recorder.isRecording {
-                if processor.isProcessing {
-                    ProcessingBannerView(
-                        status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
-                    )
-                } else if let error = recordingError {
-                    RecordingErrorBannerView(message: error) {
-                        recordingError = nil
-                    }
+            HStack(spacing: 0) {
+                CornerActionButton(icon: "ladybug.fill", color: .orange) {
+                    showingDevPanel = true
+                }
+                Spacer(minLength: 0)
+                CornerActionButton(icon: "gearshape.fill") {
+                    showingSettings = true
                 }
             }
 
-            HStack {
-                CornerActionButton(
-                    icon: "magnifyingglass",
-                    namespace: searchNamespace,
-                    geometryID: "searchExpand",
-                    isExpanded: showingTaskSearch
-                ) {
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                        showingTaskSearch = true
+            Spacer(minLength: 0)
+
+            VStack(spacing: 0) {
+                if !recorder.isRecording {
+                    if processor.isProcessing {
+                        ProcessingBannerView(
+                            status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
+                        )
+                    } else if let error = recordingError {
+                        RecordingErrorBannerView(message: error) {
+                            recordingError = nil
+                        }
                     }
                 }
-                Spacer()
-                RecordButtonView(
-                    recorder: recorder,
-                    isProcessing: processor.isProcessing,
-                    namespace: recordingNamespace,
-                    isExpanded: recorder.isRecording
-                ) {
-                    Task { await toggleRecording() }
+
+                HStack(spacing: 0) {
+                    CornerActionButton(
+                        icon: "magnifyingglass",
+                        namespace: searchNamespace,
+                        geometryID: "searchExpand",
+                        isExpanded: showingTaskSearch
+                    ) {
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+                            showingTaskSearch = true
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    RecordButtonView(
+                        recorder: recorder,
+                        isProcessing: processor.isProcessing,
+                        namespace: recordingNamespace,
+                        isExpanded: recorder.isRecording
+                    ) {
+                        Task { await toggleRecording() }
+                    }
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
         }
+        .padding(cornerPadding)
     }
 
     private func toggleRecording() async {

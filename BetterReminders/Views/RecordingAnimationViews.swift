@@ -74,6 +74,10 @@ struct RecordingWaveformBars: View {
     }
 }
 
+private enum CornerActionMetrics {
+    static let size: CGFloat = 44
+}
+
 struct RecordButtonView: View {
     @Bindable var recorder: AudioRecordingService
     var isProcessing: Bool
@@ -81,52 +85,41 @@ struct RecordButtonView: View {
     var isExpanded: Bool = false
     var action: () -> Void
 
-    var body: some View {
-        TimelineView(.animation(minimumInterval: recorder.isRecording ? 1.0 / 30.0 : 1)) { _ in
-            Button(action: action) {
-                ZStack {
-                    if recorder.isRecording && !isExpanded {
-                        let level = recorder.currentAudioLevel()
-                        ForEach(0..<3, id: \.self) { ring in
-                            Circle()
-                                .stroke(Color.red.opacity(0.22 - Double(ring) * 0.06), lineWidth: 2)
-                                .frame(width: 56 + CGFloat(ring) * 14, height: 56 + CGFloat(ring) * 14)
-                                .scaleEffect(1 + CGFloat(level) * 0.08 + CGFloat(ring) * 0.04)
-                        }
-                    }
+    private var iconColor: Color {
+        recorder.isRecording ? .red : .accentColor
+    }
 
-                    Group {
-                        if let namespace, !isExpanded {
-                            Circle()
-                                .fill(recorder.isRecording ? Color.red.gradient : Color.accentColor.gradient)
-                                .matchedGeometryEffect(id: "recordingExpand", in: namespace, isSource: !recorder.isRecording)
-                                .frame(width: 56, height: 56)
-                                .overlay {
-                                    Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
-                                        .font(.title2)
-                                        .foregroundStyle(.white)
-                                }
-                                .shadow(color: (recorder.isRecording ? Color.red : Color.accentColor).opacity(0.35), radius: 8, y: 2)
-                                .matchedGeometryEffect(id: "recordButton", in: namespace, isSource: !recorder.isRecording)
-                        } else if !isExpanded {
-                            Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
-                                .font(.title2)
-                                .foregroundStyle(.white)
-                                .frame(width: 56, height: 56)
-                                .background(
-                                    recorder.isRecording ? Color.red.gradient : Color.accentColor.gradient,
-                                    in: Circle()
-                                )
-                                .shadow(color: (recorder.isRecording ? Color.red : Color.accentColor).opacity(0.35), radius: 8, y: 2)
-                        } else {
-                            Color.clear.frame(width: 56, height: 56)
-                        }
+    private var backgroundColor: Color {
+        iconColor.opacity(0.12)
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Group {
+                if let namespace, !isExpanded {
+                    ZStack {
+                        Circle()
+                            .fill(backgroundColor)
+                            .matchedGeometryEffect(id: "recordingExpand", in: namespace, isSource: !recorder.isRecording)
+                        Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                            .font(.title3)
+                            .foregroundStyle(iconColor)
                     }
+                    .frame(width: CornerActionMetrics.size, height: CornerActionMetrics.size)
+                    .matchedGeometryEffect(id: "recordButton", in: namespace, isSource: !recorder.isRecording)
+                } else if !isExpanded {
+                    Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                        .font(.title3)
+                        .foregroundStyle(iconColor)
+                        .frame(width: CornerActionMetrics.size, height: CornerActionMetrics.size)
+                        .background(backgroundColor, in: Circle())
+                } else {
+                    Color.clear.frame(width: CornerActionMetrics.size, height: CornerActionMetrics.size)
                 }
             }
-            .disabled(isProcessing || isExpanded)
-            .opacity(isExpanded ? 0 : 1)
         }
+        .disabled(isProcessing || isExpanded)
+        .opacity(isExpanded ? 0 : 1)
     }
 }
 
@@ -143,15 +136,15 @@ struct CornerActionButton: View {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundStyle(color)
-                .frame(width: 44, height: 44)
+                .frame(width: CornerActionMetrics.size, height: CornerActionMetrics.size)
                 .background {
                     if let namespace, let geometryID {
                         Circle()
-                            .fill(Color.secondary.opacity(0.1))
+                            .fill(color.opacity(0.12))
                             .matchedGeometryEffect(id: geometryID, in: namespace, isSource: !isExpanded)
                     } else {
                         Circle()
-                            .fill(Color.secondary.opacity(0.1))
+                            .fill(color.opacity(0.12))
                     }
                 }
         }

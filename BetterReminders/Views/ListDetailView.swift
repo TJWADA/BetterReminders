@@ -82,7 +82,9 @@ struct ListDetailView: View {
             bottomActionBar
         }
         .onGeometryChange(for: EdgeInsets.self, of: { $0.safeAreaInsets }) { insets in
-            safeAreaBottom = insets.bottom
+            if insets.bottom != safeAreaBottom {
+                safeAreaBottom = insets.bottom
+            }
         }
         .overlay {
             if recorder.isRecording {
@@ -146,7 +148,7 @@ struct ListDetailView: View {
         let theme = ListColorTheme(colorHex: list.colorHex)
 
         return HStack(spacing: 8) {
-            ListHeaderIcon(icon: list.icon, colorHex: list.colorHex, size: 26)
+            ListTileIcon(icon: list.icon, colorHex: list.colorHex)
             Text(list.name)
                 .font(.headline)
             Spacer()
@@ -175,7 +177,7 @@ struct ListDetailView: View {
                 }
             }
 
-            HStack {
+            HStack(spacing: 0) {
                 CornerActionButton(
                     icon: "magnifyingglass",
                     namespace: searchNamespace,
@@ -186,8 +188,8 @@ struct ListDetailView: View {
                         showingTaskSearch = true
                     }
                 }
-                Spacer()
-                CornerActionButton(icon: "square.and.pencil", color: .accentColor) {
+                Spacer(minLength: 0)
+                CornerActionButton(icon: "square.and.pencil") {
                     showingAddReminder = true
                 }
                 RecordButtonView(

@@ -75,6 +75,7 @@
 		A10000000000000000000056 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000056 /* ListDetailView.swift */; };
 		A10000000000000000000057 /* RecordingAnimationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000057 /* RecordingAnimationViews.swift */; };
 		A10000000000000000000059 /* ExpandableOverlayViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000059 /* ExpandableOverlayViews.swift */; };
+		A1000000000000000000005B /* SharedUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005B /* SharedUserDefaults.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -191,6 +192,7 @@
 		A20000000000000000000056 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
 		A20000000000000000000057 /* RecordingAnimationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingAnimationViews.swift; sourceTree = "<group>"; };
 		A20000000000000000000059 /* ExpandableOverlayViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandableOverlayViews.swift; sourceTree = "<group>"; };
+		A2000000000000000000005B /* SharedUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedUserDefaults.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* BetterReminders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterReminders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* BetterRemindersWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BetterRemindersWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000005 /* BetterRemindersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterRemindersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -272,6 +274,7 @@
 				A20000000000000000000007 /* HapticHelper.swift */,
 				A2000000000000000000002F /* StopRecordingIntent.swift */,
 				A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */,
+				A2000000000000000000005B /* SharedUserDefaults.swift */,
 				A20000000000000000000038 /* BetterRemindersCore.entitlements */,
 			);
 			path = BetterRemindersCore;
@@ -602,6 +605,7 @@
 				A10000000000000000000048 /* HapticHelper.swift in Sources */,
 				A10000000000000000000049 /* StopRecordingIntent.swift in Sources */,
 				A1000000000000000000004A /* ActionButtonFlowCoordinator.swift in Sources */,
+				A1000000000000000000005B /* SharedUserDefaults.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

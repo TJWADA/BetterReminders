@@ -1,7 +1,6 @@
 import Foundation
 
 public enum RecordingSessionStore {
-    private static let suiteName = "group.com.betterreminders.shared"
     private static let isActiveKey = "recordingSessionActive"
     private static let pathKey = "recordingSessionPath"
     private static let stopRequestedKey = "recordingStopRequested"
@@ -13,7 +12,7 @@ public enum RecordingSessionStore {
     public static let minimumActionButtonRecordingDuration: TimeInterval = 0.75
 
     private static var defaults: UserDefaults {
-        UserDefaults(suiteName: suiteName) ?? .standard
+        SharedUserDefaults.store
     }
 
     public static var isSessionActive: Bool {
