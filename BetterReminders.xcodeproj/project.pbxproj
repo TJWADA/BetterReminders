@@ -24,14 +24,12 @@
 		A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* BetterRemindersShortcuts.swift */; };
 		A10000000000000000000010 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* RecordingActivityAttributes.swift */; };
 		A10000000000000000000011 /* RecordingLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* RecordingLiveActivityManager.swift */; };
-		A10000000000000000000012 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* MainTabView.swift */; };
-		A10000000000000000000013 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* ListsView.swift */; };
-		A10000000000000000000014 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000014 /* ListDetailView.swift */; };
+		A10000000000000000000012 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004B /* HomeView.swift */; };
 		A10000000000000000000015 /* ReminderDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000015 /* ReminderDetailView.swift */; };
-		A10000000000000000000016 /* RecordButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000016 /* RecordButtonView.swift */; };
 		A10000000000000000000017 /* ProcessingOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000017 /* ProcessingOverlayView.swift */; };
-		A10000000000000000000018 /* ActionButtonSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000018 /* ActionButtonSetupView.swift */; };
 		A10000000000000000000019 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000019 /* SettingsView.swift */; };
+		A1000000000000000000004C /* FilterSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004C /* FilterSheet.swift */; };
+		A1000000000000000000004D /* DevPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000004D /* DevPanelView.swift */; };
 		A1000000000000000000001A /* SharedViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001A /* SharedViews.swift */; };
 		A1000000000000000000001B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001B /* Assets.xcassets */; };
 		A1000000000000000000001C /* BetterRemindersWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000001C /* BetterRemindersWidgets.swift */; };
@@ -42,8 +40,6 @@
 		A10000000000000000000023 /* NotificationSchedulingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000023 /* NotificationSchedulingService.swift */; };
 		A10000000000000000000024 /* ProcessingJobCleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000024 /* ProcessingJobCleanupService.swift */; };
 		A10000000000000000000025 /* ReminderFilters.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000025 /* ReminderFilters.swift */; };
-		A10000000000000000000026 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000026 /* TodayView.swift */; };
-		A10000000000000000000027 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000027 /* OnboardingView.swift */; };
 		A10000000000000000000028 /* AudioPlaybackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000028 /* AudioPlaybackService.swift */; };
 		A10000000000000000000029 /* AudioPlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000029 /* AudioPlaybackView.swift */; };
 		A1000000000000000000002A /* TestFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000002A /* TestFixtures.swift */; };
@@ -149,13 +145,11 @@
 		A2000000000000000000000F /* BetterRemindersShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetterRemindersShortcuts.swift; sourceTree = "<group>"; };
 		A20000000000000000000010 /* RecordingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityAttributes.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* RecordingLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingLiveActivityManager.swift; sourceTree = "<group>"; };
-		A20000000000000000000012 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		A20000000000000000000013 /* ListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListsView.swift; sourceTree = "<group>"; };
-		A20000000000000000000014 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
+		A2000000000000000000004B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A2000000000000000000004C /* FilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterSheet.swift; sourceTree = "<group>"; };
+		A2000000000000000000004D /* DevPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevPanelView.swift; sourceTree = "<group>"; };
 		A20000000000000000000015 /* ReminderDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderDetailView.swift; sourceTree = "<group>"; };
-		A20000000000000000000016 /* RecordButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordButtonView.swift; sourceTree = "<group>"; };
 		A20000000000000000000017 /* ProcessingOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingOverlayView.swift; sourceTree = "<group>"; };
-		A20000000000000000000018 /* ActionButtonSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonSetupView.swift; sourceTree = "<group>"; };
 		A20000000000000000000019 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A2000000000000000000001A /* SharedViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViews.swift; sourceTree = "<group>"; };
 		A2000000000000000000001B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -169,8 +163,6 @@
 		A20000000000000000000023 /* NotificationSchedulingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingService.swift; sourceTree = "<group>"; };
 		A20000000000000000000024 /* ProcessingJobCleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessingJobCleanupService.swift; sourceTree = "<group>"; };
 		A20000000000000000000025 /* ReminderFilters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderFilters.swift; sourceTree = "<group>"; };
-		A20000000000000000000026 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
-		A20000000000000000000027 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		A20000000000000000000028 /* AudioPlaybackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackService.swift; sourceTree = "<group>"; };
 		A20000000000000000000029 /* AudioPlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackView.swift; sourceTree = "<group>"; };
 		A2000000000000000000002A /* TestFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestFixtures.swift; sourceTree = "<group>"; };
@@ -343,16 +335,12 @@
 		A8000000000000000000000A /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				A20000000000000000000012 /* MainTabView.swift */,
-				A20000000000000000000026 /* TodayView.swift */,
-				A20000000000000000000013 /* ListsView.swift */,
-				A20000000000000000000014 /* ListDetailView.swift */,
+				A2000000000000000000004B /* HomeView.swift */,
 				A20000000000000000000015 /* ReminderDetailView.swift */,
-				A20000000000000000000016 /* RecordButtonView.swift */,
 				A20000000000000000000017 /* ProcessingOverlayView.swift */,
-				A20000000000000000000018 /* ActionButtonSetupView.swift */,
 				A20000000000000000000019 /* SettingsView.swift */,
-				A20000000000000000000027 /* OnboardingView.swift */,
+				A2000000000000000000004C /* FilterSheet.swift */,
+				A2000000000000000000004D /* DevPanelView.swift */,
 				A20000000000000000000029 /* AudioPlaybackView.swift */,
 				A2000000000000000000001A /* SharedViews.swift */,
 			);
@@ -543,16 +531,12 @@
 				A1000000000000000000002E /* BackgroundRecordingProcessor.swift in Sources */,
 				A1000000000000000000000E /* ToggleRecordingIntent.swift in Sources */,
 				A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */,
-				A10000000000000000000012 /* MainTabView.swift in Sources */,
-				A10000000000000000000026 /* TodayView.swift in Sources */,
-				A10000000000000000000013 /* ListsView.swift in Sources */,
-				A10000000000000000000014 /* ListDetailView.swift in Sources */,
+				A10000000000000000000012 /* HomeView.swift in Sources */,
 				A10000000000000000000015 /* ReminderDetailView.swift in Sources */,
-				A10000000000000000000016 /* RecordButtonView.swift in Sources */,
 				A10000000000000000000017 /* ProcessingOverlayView.swift in Sources */,
-				A10000000000000000000018 /* ActionButtonSetupView.swift in Sources */,
 				A10000000000000000000019 /* SettingsView.swift in Sources */,
-				A10000000000000000000027 /* OnboardingView.swift in Sources */,
+				A1000000000000000000004C /* FilterSheet.swift in Sources */,
+				A1000000000000000000004D /* DevPanelView.swift in Sources */,
 				A10000000000000000000029 /* AudioPlaybackView.swift in Sources */,
 				A1000000000000000000001A /* SharedViews.swift in Sources */,
 			);

@@ -19,7 +19,7 @@ struct BetterRemindersApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            HomeView()
                 .onAppear {
                     Task {
                         await requestNotificationPermission()

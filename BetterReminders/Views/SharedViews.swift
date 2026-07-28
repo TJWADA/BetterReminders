@@ -1,4 +1,6 @@
 import SwiftUI
+import SwiftData
+import BetterRemindersCore
 
 extension Color {
     init(hex: String) {
@@ -47,44 +49,35 @@ struct ListNameBadge: View {
     }
 }
 
-struct ReminderFilterToolbar: View {
-    @Binding var hideCompleted: Bool
-    @Binding var priorityFilter: PriorityFilter
+struct ReminderRowView: View {
+    @Bindable var reminder: Reminder
 
     var body: some View {
-        Menu {
-            Toggle("Hide Completed", isOn: $hideCompleted)
-            Picker("Priority", selection: $priorityFilter) {
-                ForEach(PriorityFilter.allCases) { filter in
-                    Text(filter.label).tag(filter)
+        HStack(spacing: 12) {
+            Button {
+                reminder.isCompleted.toggle()
+                HapticHelper.selection()
+                Task {
+                    await reminder.updateNotificationForCompletion()
+                }
+            } label: {
+                Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(reminder.isCompleted ? .green : .secondary)
+                    .font(.title3)
+            }
+            .buttonStyle(.plain)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(reminder.title)
+                    .strikethrough(reminder.isCompleted)
+                    .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
+                if let dueDate = reminder.dueDate {
+                    Text(dueDate.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption)
+                        .foregroundStyle(ReminderFilters.isOverdue(reminder) ? .red : .secondary)
                 }
             }
-        } label: {
-            Image(systemName: "line.3.horizontal.decrease.circle")
         }
-    }
-}
-
-struct SetupStepRow: View {
-    let number: Int
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Text("\(number)")
-                .font(.caption.bold())
-                .frame(width: 24, height: 24)
-                .background(Color.accentColor.opacity(0.15), in: Circle())
-                .foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
     }
 }

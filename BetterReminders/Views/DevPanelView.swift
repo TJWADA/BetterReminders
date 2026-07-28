@@ -1,0 +1,155 @@
+import SwiftUI
+import SwiftData
+import UserNotifications
+import BetterRemindersCore
+
+struct DevPanelView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \ProcessingJob.createdAt, order: .reverse) private var jobs: [ProcessingJob]
+
+    @Bindable private var recorder = AudioRecordingService.shared
+    @State private var processor = ReminderProcessingService.shared
+    @State private var micGranted = false
+    @State private var speechGranted = false
+    @State private var notificationsGranted = false
+    @State private var apiKeyConfigured = false
+    @State private var isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
+
+    var body: some View {
+        NavigationStack {
+            List {
+                statusSection
+                if processor.isProcessing || processor.lastError != nil || !processor.lastCreatedTitles.isEmpty {
+                    processingSection
+                }
+                if !jobs.isEmpty {
+                    jobsSection
+                }
+            }
+            .navigationTitle("Debug")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .onAppear {
+                refreshStatus()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .actionButtonArmedStateChanged)) { _ in
+                isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private var statusSection: some View {
+        Section("Status") {
+            statusRow("Recording", value: recorder.isRecording ? "Active" : "Idle",
+                      isGood: !recorder.isRecording)
+            if recorder.isRecording {
+                statusRow("Elapsed", value: formattedElapsed(Int(recorder.elapsedTime)), isGood: true)
+            }
+            statusRow("Processing", value: processor.isProcessing ? "In progress" : "Idle",
+                      isGood: !processor.isProcessing)
+            statusRow("Action Button", value: isActionButtonArmed ? "Armed" : "Idle", isGood: true)
+            statusRow("API Key", value: apiKeyConfigured ? "Configured" : "Missing", isGood: apiKeyConfigured)
+            statusRow("Microphone", value: micGranted ? "Granted" : "Denied", isGood: micGranted)
+            statusRow("Speech", value: speechGranted ? "Granted" : "Denied", isGood: speechGranted)
+            statusRow("Notifications", value: notificationsGranted ? "Granted" : "Denied", isGood: notificationsGranted)
+        }
+    }
+
+    private var processingSection: some View {
+        Section("Last Processing") {
+            if processor.isProcessing, let status = processor.currentStatus {
+                Label(status.rawValue.capitalized, systemImage: "arrow.triangle.2.circlepath")
+            }
+            if !processor.lastCreatedTitles.isEmpty {
+                ForEach(processor.lastCreatedTitles, id: \.self) { title in
+                    Label(title, systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                }
+            }
+            if let error = processor.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+            }
+        }
+    }
+
+    private var jobsSection: some View {
+        Section("Recent Jobs") {
+            ForEach(jobs.prefix(10)) { job in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(job.transcript ?? "Voice memo")
+                            .font(.caption)
+                            .lineLimit(2)
+                        Spacer()
+                        Text(job.status.rawValue.capitalized)
+                            .font(.caption2)
+                            .foregroundStyle(statusColor(job.status))
+                    }
+                    Text(job.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    if job.status == .failed, let errorMessage = job.errorMessage {
+                        Text(errorMessage)
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .textSelection(.enabled)
+                    }
+                    if job.status == .failed {
+                        Button("Retry") {
+                            Task {
+                                await processor.retryJob(
+                                    job,
+                                    modelContext: modelContext,
+                                    retainAudio: AppSettings.shared.retainAudio
+                                )
+                            }
+                        }
+                        .font(.caption)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+    }
+
+    private func statusRow(_ label: String, value: String, isGood: Bool) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Text(value)
+                .foregroundStyle(isGood ? Color.secondary : Color.red)
+        }
+    }
+
+    private func statusColor(_ status: JobStatus) -> Color {
+        switch status {
+        case .done: return .green
+        case .failed: return .red
+        case .pending, .transcribing, .parsing: return .orange
+        }
+    }
+
+    private func formattedElapsed(_ seconds: Int) -> String {
+        String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+
+    private func refreshStatus() {
+        micGranted = recorder.hasMicrophonePermission
+        speechGranted = SpeechService.authorizationStatus == .authorized
+        apiKeyConfigured = !(KeychainHelper.loadAPIKey()?.isEmpty ?? true)
+        isActionButtonArmed = RecordingSessionStore.isActionButtonArmed
+        Task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            notificationsGranted = settings.authorizationStatus == .authorized
+        }
+    }
+}
