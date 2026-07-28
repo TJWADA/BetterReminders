@@ -1,30 +1,12 @@
 import Foundation
 
-public enum RecordingStopHandler {
-    public static func stopIfRecording() async throws {
-        let recorder = AudioRecordingService.shared
-        guard recorder.isRecording else { return }
-
-        HapticHelper.recordingStopped()
-        guard let url = recorder.stopRecording() else {
-            throw RecordingStopError.stopFailed
-        }
-
-        guard recordingFileIsUsable(at: url) else {
-            throw RecordingStopError.recordingTooShort
-        }
-
-        PendingRecordingStore.enqueue(url)
-        BackgroundRecordingScheduler.scheduleProcessing()
-        await RecordingCoordinator.shared.handleStoppedRecording(at: url)
-    }
-
+public enum RecordingValidation {
     public static func recordingFileIsUsable(at url: URL) -> Bool {
         guard FileManager.default.fileExists(atPath: url.path),
               let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
             return false
         }
-        return size > 1024
+        return size > AppConfiguration.Recording.minimumUsableFileBytes
     }
 
     public enum RecordingStopError: LocalizedError {

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import BetterRemindersCore
 
 enum ListSeeder {
     static let defaultLists: [(name: String, icon: String, colorHex: String)] = [
@@ -35,6 +36,6 @@ enum ListSeeder {
     }
 
     static func fallbackList(from lists: [ReminderList]) -> ReminderList? {
-        findList(named: "Ideas", in: lists) ?? lists.first
+        findList(named: AppConfiguration.fallbackListName, in: lists) ?? lists.first
     }
 }

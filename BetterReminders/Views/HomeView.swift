@@ -11,7 +11,9 @@ struct HomeView: View {
     @State private var processor = ReminderProcessingService.shared
 
     @State private var showingSettings = false
+    #if DEBUG
     @State private var showingDevPanel = false
+    #endif
     @State private var showingNewList = false
     @State private var showingTaskSearch = false
     @State private var editingList: ReminderList?
@@ -34,15 +36,7 @@ struct HomeView: View {
 
     private let fadeExtension: CGFloat = 48
 
-    @State private var safeAreaTop: CGFloat = 59
-    @State private var safeAreaBottom: CGFloat = 34
-    @State private var geometryChangeCount = 0
-
     private let cornerPadding: CGFloat = 20
-
-    private var displayedLists: [ReminderList] {
-        lists
-    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -61,50 +55,20 @@ struct HomeView: View {
                     Color.clear.frame(height: 76)
                 }
 
-                VStack(spacing: 0) {
-                    ScrollEdgeFade(isTop: true)
-                        .frame(height: safeAreaTop + 60 + fadeExtension)
-                    Spacer(minLength: 0)
-                    ScrollEdgeFade(isTop: false)
-                        .frame(height: safeAreaBottom + 76 + fadeExtension)
+                GeometryReader { geometry in
+                    VStack(spacing: 0) {
+                        ScrollEdgeFade(isTop: true)
+                            .frame(height: geometry.safeAreaInsets.top + 60 + fadeExtension)
+                        Spacer(minLength: 0)
+                        ScrollEdgeFade(isTop: false)
+                            .frame(height: geometry.safeAreaInsets.bottom + 76 + fadeExtension)
+                    }
                 }
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
                 VStack(spacing: 0) {
                     cornerActionButtons
-                }
-            }
-            .onGeometryChange(for: EdgeInsets.self, of: { $0.safeAreaInsets }) { insets in
-                geometryChangeCount += 1
-                let topWillChange = insets.top != safeAreaTop
-                let bottomWillChange = insets.bottom != safeAreaBottom
-                // #region agent log
-                if geometryChangeCount <= 20 || topWillChange || bottomWillChange {
-                    DebugSessionLog.write(
-                        location: "HomeView.swift:onGeometryChange",
-                        message: "Safe area geometry callback",
-                        hypothesisId: "H3",
-                        data: [
-                            "count": geometryChangeCount,
-                            "top": insets.top,
-                            "bottom": insets.bottom,
-                            "stateTop": safeAreaTop,
-                            "stateBottom": safeAreaBottom,
-                            "topWillChange": topWillChange,
-                            "bottomWillChange": bottomWillChange,
-                            "recording": recorder.isRecording,
-                            "searchOpen": showingTaskSearch,
-                            "navDepth": navigationPath.count,
-                        ]
-                    )
-                }
-                // #endregion
-                if topWillChange {
-                    safeAreaTop = insets.top
-                }
-                if bottomWillChange {
-                    safeAreaBottom = insets.bottom
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -142,11 +106,18 @@ struct HomeView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
+        #if DEBUG
         .sheet(isPresented: $showingDevPanel) {
             DevPanelView()
         }
+        #endif
         .sheet(isPresented: $showingNewList) {
             ListEditView()
+        }
+        .onChange(of: showingNewList) { _, isShowing in
+            if !isShowing {
+                listGridID = UUID()
+            }
         }
         .sheet(item: $editingList) { list in
             ListEditCompactView(list: list)
@@ -167,27 +138,29 @@ struct HomeView: View {
             Text(actionButtonError ?? "Could not start recording.")
         }
         .onAppear {
-            ListSeeder.seedIfNeeded(modelContext: modelContext)
             if recorder.isRecording {
                 startDisplayTimer()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingStarted)) { _ in
-            startDisplayTimer()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingStopped)) { notification in
-            stopDisplayTimer()
-            guard let url = notification.userInfo?["audioURL"] as? URL else { return }
-            Task { await processRecording(at: url) }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingFailed)) { notification in
-            actionButtonError = notification.userInfo?["message"] as? String
-        }
+        .actionButtonRecordingHandlers(
+            recorder: recorder,
+            actionButtonError: $actionButtonError,
+            startDisplayTimer: startDisplayTimer,
+            stopDisplayTimer: stopDisplayTimer,
+            processStoppedRecording: { url in
+                await RecordingFlowController.processStoppedRecording(
+                    at: url,
+                    processor: processor,
+                    modelContext: modelContext,
+                    retainAudio: settings.retainAudio
+                )
+            }
+        )
     }
 
     private var listGrid: some View {
         VStack(spacing: gridSpacing) {
-            ForEach(0..<(displayedLists.count / 2), id: \.self) { row in
+            ForEach(0..<(lists.count / 2), id: \.self) { row in
                 HStack(alignment: .top, spacing: gridSpacing) {
                     listTile(at: row * 2)
                         .frame(maxWidth: .infinity)
@@ -197,9 +170,9 @@ struct HomeView: View {
             }
 
             if !showingTaskSearch {
-                if displayedLists.count.isMultiple(of: 2) == false, !displayedLists.isEmpty {
+                if lists.count.isMultiple(of: 2) == false, !lists.isEmpty {
                     HStack(alignment: .top, spacing: gridSpacing) {
-                        listTile(for: displayedLists[displayedLists.count - 1])
+                        listTile(for: lists[lists.count - 1])
                             .frame(maxWidth: .infinity)
                         EmptyListGridCell()
                             .frame(maxWidth: .infinity)
@@ -212,9 +185,9 @@ struct HomeView: View {
                     EmptyListGridCell()
                         .frame(maxWidth: .infinity)
                 }
-            } else if displayedLists.count.isMultiple(of: 2) == false, !displayedLists.isEmpty {
+            } else if lists.count.isMultiple(of: 2) == false, !lists.isEmpty {
                 HStack(alignment: .top, spacing: gridSpacing) {
-                    listTile(for: displayedLists[displayedLists.count - 1])
+                    listTile(for: lists[lists.count - 1])
                         .frame(maxWidth: .infinity)
                     EmptyListGridCell()
                         .frame(maxWidth: .infinity)
@@ -224,7 +197,7 @@ struct HomeView: View {
     }
 
     private func listTile(at index: Int) -> some View {
-        listTile(for: displayedLists[index])
+        listTile(for: lists[index])
     }
 
     private func listTile(for list: ReminderList) -> some View {
@@ -253,9 +226,11 @@ struct HomeView: View {
     private var cornerActionButtons: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
+                #if DEBUG
                 CornerActionButton(icon: "ladybug.fill", color: .orange) {
                     showingDevPanel = true
                 }
+                #endif
                 Spacer(minLength: 0)
                 CornerActionButton(icon: "gearshape.fill") {
                     showingSettings = true
@@ -305,55 +280,16 @@ struct HomeView: View {
 
     private func toggleRecording() async {
         recordingError = nil
-
-        if KeychainHelper.loadAPIKey()?.isEmpty ?? true {
-            recordingError = "Add your OpenAI API key in Settings."
-            HapticHelper.notification(.error)
-            return
-        }
-
-        if !recorder.hasMicrophonePermission {
-            let granted = await recorder.requestMicrophonePermission()
-            guard granted else {
-                permissionDenied = true
-                return
-            }
-        }
-
-        let speechStatus = await SpeechService.requestAuthorization()
-        guard speechStatus == .authorized else {
-            permissionDenied = true
-            return
-        }
-
-        do {
-            if recorder.isRecording {
-                HapticHelper.recordingStopped()
-                guard let url = recorder.stopRecording() else { return }
-                stopDisplayTimer()
-                await processRecording(at: url)
-            } else {
-                HapticHelper.recordingStarted()
-                _ = try recorder.startRecording()
-                startDisplayTimer()
-            }
-        } catch {
-            recordingError = error.localizedDescription
-            HapticHelper.notification(.error)
-        }
-    }
-
-    private func processRecording(at url: URL) async {
-        await processor.processRecording(
-            audioURL: url,
+        await RecordingFlowController.toggleRecording(
+            recorder: recorder,
+            processor: processor,
             modelContext: modelContext,
-            retainAudio: settings.retainAudio
+            retainAudio: settings.retainAudio,
+            onRecordingError: { recordingError = $0 },
+            onPermissionDenied: { permissionDenied = true },
+            startDisplayTimer: startDisplayTimer,
+            stopDisplayTimer: stopDisplayTimer
         )
-        if processor.currentStatus == .done {
-            HapticHelper.notification(.success)
-        } else if processor.currentStatus == .failed {
-            HapticHelper.notification(.error)
-        }
     }
 
     private func startDisplayTimer() {

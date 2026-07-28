@@ -2,24 +2,6 @@ import SwiftUI
 import SwiftData
 import BetterRemindersCore
 
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let r, g, b: Double
-        switch hex.count {
-        case 6:
-            r = Double((int >> 16) & 0xFF) / 255
-            g = Double((int >> 8) & 0xFF) / 255
-            b = Double(int & 0xFF) / 255
-        default:
-            r = 0.5; g = 0.5; b = 0.5
-        }
-        self.init(red: r, green: g, blue: b)
-    }
-}
-
 struct ListColorBadge: View {
     let colorHex: String
     let icon: String
@@ -91,25 +73,6 @@ struct ListTileIcon: View {
         Image(systemName: icon)
             .font(.system(size: ListTileMetrics.iconSize, weight: .medium))
             .foregroundStyle(theme.iconGradient)
-    }
-}
-
-struct ListHeaderIcon: View {
-    let icon: String
-    let colorHex: String
-    var size: CGFloat = 32
-
-    private var theme: ListColorTheme { ListColorTheme(colorHex: colorHex) }
-
-    var body: some View {
-        Image(systemName: icon)
-            .font(.system(size: size * 0.5, weight: .medium))
-            .foregroundStyle(theme.iconGradient)
-            .frame(width: size, height: size)
-            .background(
-                RoundedRectangle(cornerRadius: size * 0.25, style: .continuous)
-                    .fill(theme.baseColor.opacity(0.15))
-            )
     }
 }
 
@@ -207,92 +170,5 @@ struct ListNameBadge: View {
             .padding(.vertical, 4)
             .background(Color(hex: colorHex).opacity(0.15), in: Capsule())
             .foregroundStyle(Color(hex: colorHex))
-    }
-}
-
-struct ReminderRowView: View {
-    @Bindable var reminder: Reminder
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Button {
-                reminder.isCompleted.toggle()
-                HapticHelper.selection()
-                Task {
-                    await reminder.updateNotificationForCompletion()
-                }
-            } label: {
-                Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(reminder.isCompleted ? .green : .secondary)
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(reminder.title)
-                    .strikethrough(reminder.isCompleted)
-                    .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
-                if let dueDate = reminder.dueDate {
-                    Text(dueDate.formatted(date: .abbreviated, time: .shortened))
-                        .font(.caption)
-                        .foregroundStyle(ReminderFilters.isOverdue(reminder) ? .red : .secondary)
-                }
-            }
-        }
-        .padding(.vertical, 2)
-    }
-}
-
-struct ScrollEdgeFade: View {
-    let isTop: Bool
-
-    var body: some View {
-        LinearGradient(
-            stops: [
-                .init(color: Color(.systemBackground), location: 0),
-                .init(color: Color(.systemBackground), location: 0.65),
-                .init(color: Color(.systemBackground).opacity(0), location: 1),
-            ],
-            startPoint: isTop ? .top : .bottom,
-            endPoint: isTop ? .bottom : .top
-        )
-        .allowsHitTesting(false)
-    }
-}
-
-extension View {
-    func listColoredHeaderBackground(colorHex: String) -> some View {
-        let theme = ListColorTheme(colorHex: colorHex)
-        return toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(theme.headerGradient, for: .navigationBar)
-    }
-
-    func topBarGradientBackground(fadeExtension: CGFloat = 40) -> some View {
-        background(alignment: .top) {
-            LinearGradient(
-                colors: [Color(.systemBackground), Color(.systemBackground).opacity(0)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: fadeExtension + 60)
-            .allowsHitTesting(false)
-        }
-    }
-
-    func bottomBarGradientBackground(fadeExtension: CGFloat = 40) -> some View {
-        background(alignment: .bottom) {
-            LinearGradient(
-                colors: [Color(.systemBackground).opacity(0), Color(.systemBackground)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: fadeExtension + 60)
-            .allowsHitTesting(false)
-        }
-    }
-
-    func scrollEdgeFadeOverlay(isTop: Bool, height: CGFloat = 72) -> some View {
-        ScrollEdgeFade(isTop: isTop)
-            .frame(height: height)
     }
 }

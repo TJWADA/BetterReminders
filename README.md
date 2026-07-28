@@ -5,7 +5,7 @@ Voice-powered reminders for iPhone. Press the Action Button, speak naturally, an
 ## Features
 
 - **Action Button integration** — Toggle recording from the iPhone Action Button via App Intents
-- **Voice capture** — Record reminders hands-free with Live Activity on Dynamic Island
+- **Voice capture** — Record reminders hands-free from the app or Action Button
 - **On-device transcription** — Apple Speech framework keeps your voice private
 - **Smart categorization** — OpenAI parses and assigns reminders to lists (Groceries, Work, etc.)
 - **Smart lists** — Pre-seeded categories plus custom lists
@@ -21,9 +21,9 @@ Voice-powered reminders for iPhone. Press the Action Button, speak naturally, an
 ## Getting Started
 
 1. Open `BetterReminders.xcodeproj` in Xcode
-2. Select your development team in Signing & Capabilities for both targets
+2. Select your development team in Signing & Capabilities for all targets
 3. Build and run on a physical device (microphone and Action Button require hardware)
-4. Go to **Settings** tab and add your OpenAI API key
+4. Go to **Settings** and add your OpenAI API key
 5. Grant Microphone and Speech Recognition permissions
 6. Follow **Settings → Set Up Action Button** to bind the shortcut
 
@@ -38,7 +38,6 @@ Voice-powered reminders for iPhone. Press the Action Button, speak naturally, an
 
 ```
 Action Button → ToggleRecordingIntent → AudioRecordingService
-                                      → RecordingLiveActivity (ActivityKit)
 Stop → SpeechService (on-device STT) → ReminderParserService (OpenAI)
      → ReminderProcessingService → SwiftData
 ```
@@ -46,7 +45,8 @@ Stop → SpeechService (on-device STT) → ReminderParserService (OpenAI)
 ## Project Structure
 
 - `BetterReminders/` — Main app (SwiftUI, SwiftData, App Intents)
-- `BetterRemindersWidgets/` — Live Activity widget extension
+- `BetterRemindersCore/` — Shared framework (recording, session state, App Intents)
+- `BetterRemindersTests/` — Unit tests
 
 ## License
 

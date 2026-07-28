@@ -2,21 +2,6 @@ import SwiftUI
 import SwiftData
 import BetterRemindersCore
 
-enum ListStyle {
-    static let presetColors = [
-        "34C759", "007AFF", "AF52DE", "FF3B30",
-        "FF9500", "FFD60A", "5856D6", "FF2D55",
-        "00C7BE", "8E8E93",
-    ]
-
-    static let presetIcons = [
-        "cart.fill", "briefcase.fill", "person.fill", "heart.fill",
-        "car.fill", "lightbulb.fill", "house.fill", "book.fill",
-        "star.fill", "flag.fill", "gift.fill", "bell.fill",
-        "fork.knife", "pawprint.fill", "airplane", "graduationcap.fill",
-    ]
-}
-
 @MainActor
 enum ListEditActions {
     static func save(
@@ -70,14 +55,6 @@ struct ListIconPickerRow: View {
                     Button {
                         icon = symbol
                         HapticHelper.selection()
-                        // #region agent log
-                        DebugSessionLog.write(
-                            location: "ListIconPickerRow.swift:iconTap",
-                            message: "Icon picker selection changed",
-                            hypothesisId: "H5",
-                            data: ["symbol": symbol, "compact": compact]
-                        )
-                        // #endregion
                     } label: {
                         Image(systemName: symbol)
                             .font(compact ? .body : .title2)
@@ -142,6 +119,7 @@ struct ListEditCompactView: View {
     @State private var icon: String
     @State private var colorHex: String
     @State private var showingDeleteConfirm = false
+    @FocusState private var isNameFieldFocused: Bool
 
     init(list: ReminderList) {
         self.list = list
@@ -159,6 +137,7 @@ struct ListEditCompactView: View {
             HStack(spacing: 12) {
                 TextField("List name", text: $name)
                     .font(.body)
+                    .focused($isNameFieldFocused)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
@@ -202,16 +181,6 @@ struct ListEditCompactView: View {
             }
             .padding(.bottom, 8)
         }
-        .onAppear {
-            // #region agent log
-            DebugSessionLog.write(
-                location: "ListEditCompactView.swift:onAppear",
-                message: "Compact edit sheet appeared",
-                hypothesisId: "H5",
-                data: ["icon": icon, "colorHex": colorHex]
-            )
-            // #endregion
-        }
         .confirmationDialog(
             "Delete this list and all its reminders?",
             isPresented: $showingDeleteConfirm,
@@ -219,8 +188,15 @@ struct ListEditCompactView: View {
         ) {
             Button("Delete", role: .destructive) {
                 ListEditActions.delete(list: list, modelContext: modelContext)
-                dismiss()
+                closeSheet()
             }
+        }
+    }
+
+    private func closeSheet() {
+        isNameFieldFocused = false
+        Task { @MainActor in
+            dismiss()
         }
     }
 
@@ -233,7 +209,7 @@ struct ListEditCompactView: View {
             allLists: [],
             modelContext: modelContext
         ) else { return }
-        dismiss()
+        closeSheet()
     }
 }
 
@@ -248,6 +224,7 @@ struct ListEditView: View {
     @State private var icon: String
     @State private var colorHex: String
     @State private var showingDeleteConfirm = false
+    @FocusState private var isNameFieldFocused: Bool
 
     init(list: ReminderList? = nil) {
         self.existingList = list
@@ -265,6 +242,7 @@ struct ListEditView: View {
             Form {
                 Section("Name") {
                     TextField("List name", text: $name)
+                        .focused($isNameFieldFocused)
                 }
 
                 Section("Icon") {
@@ -296,11 +274,12 @@ struct ListEditView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(existingList == nil ? "New List" : "Edit List")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { closeSheet() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
@@ -319,6 +298,13 @@ struct ListEditView: View {
         }
     }
 
+    private func closeSheet() {
+        isNameFieldFocused = false
+        Task { @MainActor in
+            dismiss()
+        }
+    }
+
     private func save() {
         guard ListEditActions.save(
             name: name,
@@ -328,12 +314,12 @@ struct ListEditView: View {
             allLists: allLists,
             modelContext: modelContext
         ) else { return }
-        dismiss()
+        closeSheet()
     }
 
     private func deleteList() {
         guard let list = existingList else { return }
         ListEditActions.delete(list: list, modelContext: modelContext)
-        dismiss()
+        closeSheet()
     }
 }

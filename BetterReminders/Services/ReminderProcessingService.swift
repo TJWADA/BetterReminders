@@ -19,8 +19,7 @@ final class ReminderProcessingService {
         audioURL: URL,
         modelContext: ModelContext,
         retainAudio: Bool,
-        defaultList: ReminderList? = nil,
-        updatesLiveActivity: Bool = false
+        defaultList: ReminderList? = nil
     ) async {
         guard !isProcessing else { return }
 
@@ -41,74 +40,27 @@ final class ReminderProcessingService {
             currentStatus = .transcribing
             job.status = .transcribing
             try modelContext.save()
-            if updatesLiveActivity {
-                await RecordingLiveActivityManager.showTranscribing()
-            }
 
             let transcript = try await SpeechService.transcribe(audioURL: audioURL)
             job.transcript = transcript
 
-            currentStatus = .parsing
-            job.status = .parsing
-            try modelContext.save()
-            if updatesLiveActivity {
-                await RecordingLiveActivityManager.showParsing()
-            }
-
-            let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
-                sortBy: [SortDescriptor(\.sortOrder)]
-            ))
-            guard !lists.isEmpty else {
-                throw ProcessingError.noListsAvailable
-            }
-
-            let parsed = try await ReminderParserService.parse(
+            try await runParsingPipeline(
+                job: job,
                 transcript: transcript,
-                listNames: lists.map(\.name),
-                recentCorrections: AppSettings.shared.recentCorrections
-            )
-
-            let firstResult = await insertParsedReminders(
-                parsed.reminders,
-                transcript: transcript,
-                lists: lists,
+                modelContext: modelContext,
                 defaultList: defaultList,
-                retainAudioPath: retainAudio ? audioPath : nil,
-                modelContext: modelContext
+                retainAudioPath: retainAudio ? audioPath : nil
             )
-
-            job.status = .done
-            currentStatus = .done
-            try modelContext.save()
-
-            ProcessingJobCleanupService.cleanup(modelContext: modelContext)
 
             if !retainAudio {
                 try? FileManager.default.removeItem(at: audioURL)
             }
-
-            if updatesLiveActivity,
-               let firstResultTitle = firstResult.firstTitle,
-               let firstResultListName = firstResult.firstListName,
-               let firstResultListIcon = firstResult.firstListIcon {
-                await RecordingLiveActivityManager.showCompleted(
-                    title: firstResultTitle,
-                    listName: firstResultListName,
-                    listIcon: firstResultListIcon
-                )
-            }
-
-            await sendConfirmationNotification(titles: lastCreatedTitles)
         } catch {
             job.status = .failed
             job.errorMessage = error.localizedDescription
             currentStatus = .failed
             lastError = error.localizedDescription
             try? modelContext.save()
-
-            if updatesLiveActivity {
-                await RecordingLiveActivityManager.showFailed(message: error.localizedDescription)
-            }
         }
 
         isProcessing = false
@@ -142,8 +94,7 @@ final class ReminderProcessingService {
             await processRecording(
                 audioURL: url,
                 modelContext: modelContext,
-                retainAudio: retainAudio,
-                updatesLiveActivity: false
+                retainAudio: retainAudio
             )
             return
         }
@@ -158,32 +109,12 @@ final class ReminderProcessingService {
         job.errorMessage = nil
 
         do {
-            let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
-                sortBy: [SortDescriptor(\.sortOrder)]
-            ))
-            guard !lists.isEmpty else {
-                throw ProcessingError.noListsAvailable
-            }
-
-            let parsed = try await ReminderParserService.parse(
+            try await runParsingPipeline(
+                job: job,
                 transcript: transcript,
-                listNames: lists.map(\.name),
-                recentCorrections: AppSettings.shared.recentCorrections
+                modelContext: modelContext,
+                retainAudioPath: retainAudio ? job.audioFilePath : nil
             )
-
-            _ = await insertParsedReminders(
-                parsed.reminders,
-                transcript: transcript,
-                lists: lists,
-                retainAudioPath: retainAudio ? job.audioFilePath : nil,
-                modelContext: modelContext
-            )
-
-            job.status = .done
-            currentStatus = .done
-            try modelContext.save()
-            ProcessingJobCleanupService.cleanup(modelContext: modelContext)
-            await sendConfirmationNotification(titles: lastCreatedTitles)
         } catch {
             job.status = .failed
             job.errorMessage = error.localizedDescription
@@ -193,6 +124,47 @@ final class ReminderProcessingService {
         }
 
         isProcessing = false
+    }
+
+    @MainActor
+    private func runParsingPipeline(
+        job: ProcessingJob,
+        transcript: String,
+        modelContext: ModelContext,
+        defaultList: ReminderList? = nil,
+        retainAudioPath: String?
+    ) async throws {
+        currentStatus = .parsing
+        job.status = .parsing
+        try modelContext.save()
+
+        let lists = try modelContext.fetch(FetchDescriptor<ReminderList>(
+            sortBy: [SortDescriptor(\.sortOrder)]
+        ))
+        guard !lists.isEmpty else {
+            throw ProcessingError.noListsAvailable
+        }
+
+        let parsed = try await ReminderParserService.parse(
+            transcript: transcript,
+            listNames: lists.map(\.name),
+            recentCorrections: AppSettings.shared.recentCorrections
+        )
+
+        _ = await insertParsedReminders(
+            parsed.reminders,
+            transcript: transcript,
+            lists: lists,
+            defaultList: defaultList,
+            retainAudioPath: retainAudioPath,
+            modelContext: modelContext
+        )
+
+        job.status = .done
+        currentStatus = .done
+        try modelContext.save()
+        ProcessingJobCleanupService.cleanup(modelContext: modelContext)
+        await sendConfirmationNotification(titles: lastCreatedTitles)
     }
 
     @MainActor

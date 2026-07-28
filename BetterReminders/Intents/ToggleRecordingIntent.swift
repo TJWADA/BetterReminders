@@ -29,17 +29,3 @@ struct ToggleRecordingIntent: AppIntent {
         return .result()
     }
 }
-
-enum ActionButtonIntentError: LocalizedError {
-    case apiKeyMissing
-    case speechPermissionDenied
-
-    var errorDescription: String? {
-        switch self {
-        case .apiKeyMissing:
-            return "OpenAI API key not configured. Add it in Settings first."
-        case .speechPermissionDenied:
-            return "Enable speech recognition in Settings to record reminders."
-        }
-    }
-}

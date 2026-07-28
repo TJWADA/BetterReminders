@@ -13,7 +13,6 @@ struct ListDetailView: View {
 
     @State private var showingSettings = false
     @State private var showingTaskSearch = false
-    @State private var showingDevPanel = false
     @State private var showingAddReminder = false
 
     @State private var displayTick = 0
@@ -24,9 +23,6 @@ struct ListDetailView: View {
 
     @Namespace private var recordingNamespace
     @Namespace private var searchNamespace
-
-    @State private var safeAreaBottom: CGFloat = 34
-    @State private var geometryChangeCount = 0
 
     private let fadeExtension: CGFloat = 48
 
@@ -71,40 +67,21 @@ struct ListDetailView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .bottom) {
-            ScrollEdgeFade(isTop: false)
-                .frame(height: safeAreaBottom + 76 + fadeExtension)
-                .ignoresSafeArea(edges: .bottom)
-                .allowsHitTesting(false)
+            GeometryReader { geometry in
+                VStack {
+                    Spacer(minLength: 0)
+                    ScrollEdgeFade(isTop: false)
+                        .frame(height: geometry.safeAreaInsets.bottom + 76 + fadeExtension)
+                }
+            }
+            .ignoresSafeArea(edges: .bottom)
+            .allowsHitTesting(false)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Color.clear.frame(height: 76)
         }
         .overlay(alignment: .bottom) {
             bottomActionBar
-        }
-        .onGeometryChange(for: EdgeInsets.self, of: { $0.safeAreaInsets }) { insets in
-            geometryChangeCount += 1
-            let bottomWillChange = insets.bottom != safeAreaBottom
-            // #region agent log
-            if geometryChangeCount <= 20 || bottomWillChange {
-                DebugSessionLog.write(
-                    location: "ListDetailView.swift:onGeometryChange",
-                    message: "Safe area geometry callback",
-                    hypothesisId: "H4",
-                    data: [
-                        "count": geometryChangeCount,
-                        "bottom": insets.bottom,
-                        "stateBottom": safeAreaBottom,
-                        "bottomWillChange": bottomWillChange,
-                        "recording": recorder.isRecording,
-                        "searchOpen": showingTaskSearch,
-                    ]
-                )
-            }
-            // #endregion
-            if bottomWillChange {
-                safeAreaBottom = insets.bottom
-            }
         }
         .overlay {
             if recorder.isRecording {
@@ -132,9 +109,6 @@ struct ListDetailView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
-        .sheet(isPresented: $showingDevPanel) {
-            DevPanelView()
-        }
         .sheet(isPresented: $showingAddReminder) {
             AddReminderSheet(list: list)
         }
@@ -151,17 +125,21 @@ struct ListDetailView: View {
         } message: {
             Text(actionButtonError ?? "Could not start recording.")
         }
-        .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingStarted)) { _ in
-            startDisplayTimer()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingStopped)) { notification in
-            stopDisplayTimer()
-            guard let url = notification.userInfo?["audioURL"] as? URL else { return }
-            Task { await processRecording(at: url) }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .actionButtonRecordingFailed)) { notification in
-            actionButtonError = notification.userInfo?["message"] as? String
-        }
+        .actionButtonRecordingHandlers(
+            recorder: recorder,
+            actionButtonError: $actionButtonError,
+            startDisplayTimer: startDisplayTimer,
+            stopDisplayTimer: stopDisplayTimer,
+            processStoppedRecording: { url in
+                await RecordingFlowController.processStoppedRecording(
+                    at: url,
+                    processor: processor,
+                    modelContext: modelContext,
+                    retainAudio: settings.retainAudio,
+                    defaultList: list
+                )
+            }
+        )
     }
 
     private var listHeader: some View {
@@ -228,56 +206,17 @@ struct ListDetailView: View {
 
     private func toggleRecording() async {
         recordingError = nil
-
-        if KeychainHelper.loadAPIKey()?.isEmpty ?? true {
-            recordingError = "Add your OpenAI API key in Settings."
-            HapticHelper.notification(.error)
-            return
-        }
-
-        if !recorder.hasMicrophonePermission {
-            let granted = await recorder.requestMicrophonePermission()
-            guard granted else {
-                permissionDenied = true
-                return
-            }
-        }
-
-        let speechStatus = await SpeechService.requestAuthorization()
-        guard speechStatus == .authorized else {
-            permissionDenied = true
-            return
-        }
-
-        do {
-            if recorder.isRecording {
-                HapticHelper.recordingStopped()
-                guard let url = recorder.stopRecording() else { return }
-                stopDisplayTimer()
-                await processRecording(at: url)
-            } else {
-                HapticHelper.recordingStarted()
-                _ = try recorder.startRecording()
-                startDisplayTimer()
-            }
-        } catch {
-            recordingError = error.localizedDescription
-            HapticHelper.notification(.error)
-        }
-    }
-
-    private func processRecording(at url: URL) async {
-        await processor.processRecording(
-            audioURL: url,
+        await RecordingFlowController.toggleRecording(
+            recorder: recorder,
+            processor: processor,
             modelContext: modelContext,
             retainAudio: settings.retainAudio,
-            defaultList: list
+            defaultList: list,
+            onRecordingError: { recordingError = $0 },
+            onPermissionDenied: { permissionDenied = true },
+            startDisplayTimer: startDisplayTimer,
+            stopDisplayTimer: stopDisplayTimer
         )
-        if processor.currentStatus == .done {
-            HapticHelper.notification(.success)
-        } else if processor.currentStatus == .failed {
-            HapticHelper.notification(.error)
-        }
     }
 
     private func startDisplayTimer() {

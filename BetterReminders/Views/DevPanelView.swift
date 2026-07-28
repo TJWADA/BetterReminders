@@ -48,7 +48,7 @@ struct DevPanelView: View {
             statusRow("Recording", value: recorder.isRecording ? "Active" : "Idle",
                       isGood: !recorder.isRecording)
             if recorder.isRecording {
-                statusRow("Elapsed", value: formattedElapsed(Int(recorder.elapsedTime)), isGood: true)
+                statusRow("Elapsed", value: DurationFormatter.mmss(from: recorder.elapsedTime), isGood: true)
             }
             statusRow("Processing", value: processor.isProcessing ? "In progress" : "Idle",
                       isGood: !processor.isProcessing)
@@ -130,10 +130,6 @@ struct DevPanelView: View {
         case .failed: return .red
         case .pending, .transcribing, .parsing: return .orange
         }
-    }
-
-    private func formattedElapsed(_ seconds: Int) -> String {
-        String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
     private func refreshStatus() {

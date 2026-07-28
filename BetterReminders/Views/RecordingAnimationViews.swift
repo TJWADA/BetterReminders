@@ -1,54 +1,6 @@
 import SwiftUI
 import BetterRemindersCore
 
-struct RecordingBannerView: View {
-    @Bindable var recorder: AudioRecordingService
-    var displayTick: Int = 0
-
-    private let barCount = 7
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { _ in
-            HStack(spacing: 16) {
-                RecordingWaveformBars(
-                    level: recorder.currentAudioLevel(),
-                    barCount: barCount,
-                    color: .red
-                )
-                .frame(height: 28)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Recording")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.red)
-                    Text(formattedElapsed(Int(recorder.elapsedTime)))
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                        .id(displayTick)
-                }
-
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.red.opacity(0.08))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .strokeBorder(.red.opacity(0.18), lineWidth: 1)
-                    }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
-        }
-    }
-
-    private func formattedElapsed(_ seconds: Int) -> String {
-        String(format: "%d:%02d", seconds / 60, seconds % 60)
-    }
-}
-
 struct RecordingWaveformBars: View {
     let level: Double
     var barCount: Int = 5

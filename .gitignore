@@ -20,5 +20,4 @@ build/
 Packages/
 Package.resolved
 
-# Secrets
-*.env
+.cursor/

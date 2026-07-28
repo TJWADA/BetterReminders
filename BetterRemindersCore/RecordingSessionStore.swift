@@ -3,13 +3,11 @@ import Foundation
 public enum RecordingSessionStore {
     private static let isActiveKey = "recordingSessionActive"
     private static let pathKey = "recordingSessionPath"
-    private static let stopRequestedKey = "recordingStopRequested"
-    private static let actionButtonArmedKey = "actionButtonArmed"
     private static let openRecordTabKey = "openRecordTab"
     private static let sessionStartedAtKey = "recordingSessionStartedAt"
 
     /// Ignore action-button stop requests fired immediately after start (duplicate intent invocations).
-    public static let minimumActionButtonRecordingDuration: TimeInterval = 0.75
+    public static let minimumActionButtonRecordingDuration = AppConfiguration.Recording.minimumActionButtonDuration
 
     private static var defaults: UserDefaults {
         SharedUserDefaults.store
@@ -23,14 +21,9 @@ public enum RecordingSessionStore {
         defaults.string(forKey: pathKey)
     }
 
-    public static var isActionButtonArmed: Bool {
-        defaults.bool(forKey: actionButtonArmedKey)
-    }
-
     public static func markStarted(path: String) {
         defaults.set(true, forKey: isActiveKey)
         defaults.set(path, forKey: pathKey)
-        defaults.set(false, forKey: stopRequestedKey)
         defaults.set(Date().timeIntervalSince1970, forKey: sessionStartedAtKey)
     }
 
@@ -38,16 +31,9 @@ public enum RecordingSessionStore {
         defaults.removeObject(forKey: isActiveKey)
         defaults.removeObject(forKey: pathKey)
         defaults.removeObject(forKey: sessionStartedAtKey)
-        defaults.set(false, forKey: stopRequestedKey)
     }
 
-    public static func setActionButtonArmed(_ armed: Bool) {
-        defaults.set(armed, forKey: actionButtonArmedKey)
-    }
-
-    public static func clearActionButtonState() {
-        defaults.set(false, forKey: actionButtonArmedKey)
-    }
+    public static func clearActionButtonState() {}
 
     public static func markOpenRecordTab() {
         defaults.set(true, forKey: openRecordTabKey)
@@ -56,16 +42,6 @@ public enum RecordingSessionStore {
     public static func consumeOpenRecordTab() -> Bool {
         guard defaults.bool(forKey: openRecordTabKey) else { return false }
         defaults.set(false, forKey: openRecordTabKey)
-        return true
-    }
-
-    public static func requestStop() {
-        defaults.set(true, forKey: stopRequestedKey)
-    }
-
-    public static func consumeStopRequest() -> Bool {
-        guard defaults.bool(forKey: stopRequestedKey) else { return false }
-        defaults.set(false, forKey: stopRequestedKey)
         return true
     }
 

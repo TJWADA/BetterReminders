@@ -1,12 +1,12 @@
 import Foundation
 import SwiftData
+import BetterRemindersCore
 
 enum ProcessingJobCleanupService {
-    private static let retentionDays = 7
-    private static let maxRetainedJobs = 20
-
     @MainActor
     static func cleanup(modelContext: ModelContext) {
+        let retentionDays = AppConfiguration.ProcessingJobs.retentionDays
+        let maxRetainedJobs = AppConfiguration.ProcessingJobs.maxJobs
         let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? Date()
 
         guard let allJobs = try? modelContext.fetch(

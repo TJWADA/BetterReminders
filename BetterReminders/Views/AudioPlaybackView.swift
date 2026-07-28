@@ -57,9 +57,6 @@ struct AudioPlaybackView: View {
     }
 
     private func formatTime(_ time: TimeInterval) -> String {
-        let total = max(0, Int(time.rounded()))
-        let minutes = total / 60
-        let seconds = total % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        DurationFormatter.mmss(from: time)
     }
 }

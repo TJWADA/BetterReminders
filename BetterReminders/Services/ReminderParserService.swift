@@ -1,37 +1,5 @@
 import Foundation
-
-struct ParsedReminder: Codable {
-    let title: String
-    let list: String
-    let dueDate: String?
-    let priority: String?
-
-    init(title: String, list: String, dueDate: String? = nil, priority: String? = nil) {
-        self.title = title
-        self.list = list
-        self.dueDate = dueDate
-        self.priority = priority
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        title = try container.decode(String.self, forKey: .title)
-        list = try container.decode(String.self, forKey: .list)
-        dueDate = try container.decodeIfPresent(String.self, forKey: .dueDate)
-        if let priorityString = try? container.decode(String.self, forKey: .priority) {
-            priority = priorityString
-        } else if let priorityInt = try? container.decode(Int.self, forKey: .priority) {
-            priority = String(priorityInt)
-        } else {
-            priority = nil
-        }
-    }
-}
-
-struct ParsedReminderResponse: Codable {
-    let reminders: [ParsedReminder]
-    let confidence: Double?
-}
+import BetterRemindersCore
 
 enum ReminderParserService {
     static func parse(
@@ -44,10 +12,12 @@ enum ReminderParserService {
         }
 
         let now = ISO8601DateFormatter().string(from: Date())
-        let listsText = listNames.isEmpty ? "Groceries, Work, Personal, Health, Errands, Ideas" : listNames.joined(separator: ", ")
+        let defaultListNames = ListSeeder.defaultLists.map(\.name).joined(separator: ", ")
+        let listsText = listNames.isEmpty ? defaultListNames : listNames.joined(separator: ", ")
         let correctionsText = recentCorrections.isEmpty
             ? "None"
             : recentCorrections.joined(separator: "; ")
+        let fallbackList = AppConfiguration.fallbackListName
 
         let systemPrompt = """
         You extract structured reminders from voice transcripts.
@@ -59,14 +29,14 @@ enum ReminderParserService {
         - Return JSON only with keys "reminders" and "confidence".
         - Each reminder has: title, list, dueDate (ISO8601 or null), priority (none|low|medium|high).
         - Pick the best matching list from available lists.
-        - If none fit, use "Ideas".
+        - If none fit, use "\(fallbackList)".
         - Support multiple reminders from one transcript.
         - Summarize titles concisely (under 80 chars).
         - Parse relative dates like "tomorrow", "next Tuesday", "in 2 hours".
         """
 
         let body: [String: Any] = [
-            "model": "gpt-4o-mini",
+            "model": AppConfiguration.OpenAI.model,
             "response_format": ["type": "json_object"],
             "messages": [
                 ["role": "system", "content": systemPrompt],
@@ -74,12 +44,12 @@ enum ReminderParserService {
             ],
         ]
 
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        var request = URLRequest(url: AppConfiguration.OpenAI.chatCompletionsURL)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        request.timeoutInterval = 60
+        request.timeoutInterval = AppConfiguration.OpenAI.requestTimeout
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
@@ -94,7 +64,7 @@ enum ReminderParserService {
             throw ParserError.invalidResponse
         }
 
-        return try parseResponseContent(content)
+        return try parseResponseContent(content, fallbackList: fallbackList)
     }
 
     static func validateAPIKey() async throws {
@@ -102,7 +72,7 @@ enum ReminderParserService {
             throw ParserError.missingAPIKey
         }
 
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/models")!)
+        var request = URLRequest(url: AppConfiguration.OpenAI.modelsURL)
         request.httpMethod = "GET"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 30
@@ -125,7 +95,7 @@ enum ReminderParserService {
         return String(data: data, encoding: .utf8) ?? "Unknown error"
     }
 
-    private static func parseResponseContent(_ content: String) throws -> ParsedReminderResponse {
+    private static func parseResponseContent(_ content: String, fallbackList: String) throws -> ParsedReminderResponse {
         let trimmed = content
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: "```json", with: "")
@@ -153,7 +123,7 @@ enum ReminderParserService {
             let list = (item["list"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
             return ParsedReminder(
                 title: title,
-                list: (list?.isEmpty == false ? list! : "Ideas"),
+                list: (list?.isEmpty == false ? list! : fallbackList),
                 dueDate: item["dueDate"] as? String,
                 priority: stringify(item["priority"])
             )
@@ -223,7 +193,7 @@ enum ReminderParserService {
         var errorDescription: String? {
             switch self {
             case .missingAPIKey:
-                return "OpenAI API key not configured. Add it in Settings."
+                return APIKeyValidator.missingKeyMessage
             case .invalidResponse:
                 return "Invalid response from AI service"
             case .noRemindersFound:

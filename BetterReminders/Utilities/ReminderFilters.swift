@@ -1,19 +1,5 @@
 import Foundation
 
-enum ReminderGroupMode: String, CaseIterable, Identifiable {
-    case byList
-    case byDueDate
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .byList: return "By List"
-        case .byDueDate: return "By Due Date"
-        }
-    }
-}
-
 enum ReminderSortMode: String, CaseIterable, Identifiable {
     case dueDate
     case createdNewest

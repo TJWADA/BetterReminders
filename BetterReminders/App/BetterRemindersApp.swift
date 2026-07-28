@@ -9,17 +9,8 @@ struct BetterRemindersApp: App {
     let modelContainer: ModelContainer
 
     init() {
-        // #region agent log
-        DebugSessionLog.write(
-            location: "BetterRemindersApp.swift:init",
-            message: "App init before RecordingSessionStore access",
-            hypothesisId: "H2"
-        )
-        // #endregion
-        RecordingSessionStore.clearActionButtonState()
         do {
             modelContainer = try ModelContainer(for: Reminder.self, ReminderList.self, ProcessingJob.self)
-            BackgroundRecordingProcessor.register()
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
@@ -29,17 +20,12 @@ struct BetterRemindersApp: App {
         WindowGroup {
             HomeView()
                 .onAppear {
+                    RecordingSessionStore.clearActionButtonState()
                     Task {
                         await ActionButtonRecordingHandler.continueFromAppOpenIfNeeded()
                         await requestNotificationPermission()
                         ListSeeder.seedIfNeeded(modelContext: modelContainer.mainContext)
                         await syncNotificationsAndCleanup()
-                        await processPendingRecordings()
-                    }
-                }
-                .onReceive(NotificationCenter.default.publisher(for: .recordingDidFinish)) { _ in
-                    Task {
-                        await processPendingRecordings()
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .actionButtonOpenRecordingRequested)) { _ in
@@ -52,7 +38,6 @@ struct BetterRemindersApp: App {
                         Task {
                             await ActionButtonRecordingHandler.continueFromAppOpenIfNeeded()
                             await syncNotificationsAndCleanup()
-                            await processPendingRecordings()
                         }
                     }
                 }
@@ -71,10 +56,5 @@ struct BetterRemindersApp: App {
         if let reminders = try? modelContainer.mainContext.fetch(FetchDescriptor<Reminder>()) {
             await NotificationSchedulingService.rescheduleAll(reminders: reminders)
         }
-    }
-
-    @MainActor
-    private func processPendingRecordings() async {
-        await BackgroundRecordingProcessor.processAllPending()
     }
 }

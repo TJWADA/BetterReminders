@@ -22,16 +22,16 @@ public enum ActionButtonFlowCoordinator {
     public static func stopRecording() async throws -> URL {
         let recorder = AudioRecordingService.shared
         guard recorder.isRecording else {
-            throw RecordingStopHandler.RecordingStopError.stopFailed
+            throw RecordingValidation.RecordingStopError.stopFailed
         }
 
         HapticHelper.recordingStopped()
         guard let url = recorder.stopRecording() else {
-            throw RecordingStopHandler.RecordingStopError.stopFailed
+            throw RecordingValidation.RecordingStopError.stopFailed
         }
 
-        guard RecordingStopHandler.recordingFileIsUsable(at: url) else {
-            throw RecordingStopHandler.RecordingStopError.recordingTooShort
+        guard RecordingValidation.recordingFileIsUsable(at: url) else {
+            throw RecordingValidation.RecordingStopError.recordingTooShort
         }
 
         NotificationCenter.default.post(

@@ -31,22 +31,8 @@ enum ActionButtonRecordingHandler {
         let recorder = AudioRecordingService.shared
         guard !recorder.isRecording else { return }
 
-        if KeychainHelper.loadAPIKey()?.isEmpty ?? true {
-            throw ActionButtonIntentError.apiKeyMissing
-        }
-
-        if !recorder.hasMicrophonePermission {
-            let granted = await recorder.requestMicrophonePermission()
-            guard granted else {
-                throw AudioRecordingService.RecordingError.permissionDenied
-            }
-        }
-
-        let speechStatus = await SpeechService.requestAuthorization()
-        guard speechStatus == .authorized else {
-            throw ActionButtonIntentError.speechPermissionDenied
-        }
-
+        try APIKeyValidator.requireConfigured()
+        try await RecordingPermissions.ensureAuthorized(recorder: recorder)
         try await ActionButtonFlowCoordinator.startRecording()
     }
 
