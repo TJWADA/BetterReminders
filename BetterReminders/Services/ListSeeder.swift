@@ -3,14 +3,14 @@ import SwiftData
 import BetterRemindersCore
 
 enum ListSeeder {
-    static let defaultLists: [(name: String, icon: String, colorHex: String)] = [
-        ("General", "tray.fill", "8E8E93"),
-        ("Groceries", "cart.fill", "34C759"),
-        ("Work", "briefcase.fill", "007AFF"),
-        ("Personal", "person.fill", "AF52DE"),
-        ("Health", "heart.fill", "FF3B30"),
-        ("Errands", "car.fill", "FF9500"),
-        ("Ideas", "lightbulb.fill", "FFD60A"),
+    static let defaultLists: [(name: String, icon: String, colorHex: String, description: String)] = [
+        ("General", "tray.fill", "8E8E93", "Catch-all for reminders that do not clearly fit another list."),
+        ("Groceries", "cart.fill", "34C759", "Food and household shopping items."),
+        ("Work", "briefcase.fill", "007AFF", "Job tasks, meetings, and professional follow-ups."),
+        ("Personal", "person.fill", "AF52DE", "Personal life tasks and home to-dos."),
+        ("Health", "heart.fill", "FF3B30", "Exercise, appointments, medications, and wellness."),
+        ("Errands", "car.fill", "FF9500", "Out-and-about tasks like pickups, returns, and appointments."),
+        ("Ideas", "lightbulb.fill", "FFD60A", "Brainstorms, notes, and things to explore later."),
     ]
 
     @MainActor
@@ -23,7 +23,8 @@ enum ListSeeder {
                 icon: list.icon,
                 colorHex: list.colorHex,
                 sortOrder: index,
-                isDefault: true
+                isDefault: true,
+                listDescription: list.description
             )
             modelContext.insert(reminderList)
         }
@@ -45,7 +46,8 @@ enum ListSeeder {
             icon: "tray.fill",
             colorHex: "8E8E93",
             sortOrder: minOrder - 1,
-            isDefault: true
+            isDefault: true,
+            listDescription: "Catch-all for reminders that do not clearly fit another list."
         )
         modelContext.insert(general)
         try? modelContext.save()

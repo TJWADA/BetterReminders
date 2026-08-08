@@ -145,10 +145,10 @@ final class ReminderProcessingService {
             throw ProcessingError.noListsAvailable
         }
 
+        let listContexts = lists.map(ListClassificationContext.from(list:))
         let parsed = try await ReminderParserService.parse(
             transcript: transcript,
-            listNames: lists.map(\.name),
-            recentCorrections: AppSettings.shared.recentCorrections
+            listContexts: listContexts
         )
 
         _ = await insertParsedReminders(

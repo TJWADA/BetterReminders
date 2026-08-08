@@ -58,6 +58,8 @@
 		A1000000000000000000005F /* DurationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005F /* DurationFormatter.swift */; };
 		A10000000000000000000060 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000060 /* Color+Hex.swift */; };
 		A10000000000000000000061 /* ParsedReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000061 /* ParsedReminder.swift */; };
+		A1000000000000000000006C /* ListClassificationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006C /* ListClassificationContext.swift */; };
+		A1000000000000000000006D /* ListClassificationContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006D /* ListClassificationContextTests.swift */; };
 		A10000000000000000000062 /* ListStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000062 /* ListStyle.swift */; };
 		A10000000000000000000063 /* Reminder+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000063 /* Reminder+Display.swift */; };
 		A10000000000000000000066 /* ReminderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000066 /* ReminderRowView.swift */; };
@@ -151,6 +153,8 @@
 		A2000000000000000000005F /* DurationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationFormatter.swift; sourceTree = "<group>"; };
 		A20000000000000000000060 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		A20000000000000000000061 /* ParsedReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsedReminder.swift; sourceTree = "<group>"; };
+		A2000000000000000000006C /* ListClassificationContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListClassificationContext.swift; sourceTree = "<group>"; };
+		A2000000000000000000006D /* ListClassificationContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListClassificationContextTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000062 /* ListStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStyle.swift; sourceTree = "<group>"; };
 		A20000000000000000000063 /* Reminder+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Display.swift"; sourceTree = "<group>"; };
 		A20000000000000000000069 /* AppGroupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupStorage.swift; sourceTree = "<group>"; };
@@ -262,6 +266,7 @@
 				A20000000000000000000063 /* Reminder+Display.swift */,
 				A20000000000000000000037 /* Reminder+Notifications.swift */,
 				A20000000000000000000061 /* ParsedReminder.swift */,
+				A2000000000000000000006C /* ListClassificationContext.swift */,
 				A20000000000000000000062 /* ListStyle.swift */,
 				A20000000000000000000005 /* ProcessingJob.swift */,
 			);
@@ -340,6 +345,7 @@
 				A2000000000000000000002B /* ReminderFiltersTests.swift */,
 				A20000000000000000000033 /* ProcessingJobCleanupServiceTests.swift */,
 				A20000000000000000000034 /* ReminderParserServiceTests.swift */,
+				A2000000000000000000006D /* ListClassificationContextTests.swift */,
 				A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */,
 			);
 			path = BetterRemindersTests;
@@ -465,6 +471,7 @@
 				A10000000000000000000063 /* Reminder+Display.swift in Sources */,
 				A10000000000000000000053 /* Reminder+Notifications.swift in Sources */,
 				A10000000000000000000061 /* ParsedReminder.swift in Sources */,
+				A1000000000000000000006C /* ListClassificationContext.swift in Sources */,
 				A10000000000000000000062 /* ListStyle.swift in Sources */,
 				A10000000000000000000005 /* ProcessingJob.swift in Sources */,
 				A10000000000000000000006 /* KeychainHelper.swift in Sources */,
@@ -507,6 +514,7 @@
 				A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */,
 				A10000000000000000000033 /* ProcessingJobCleanupServiceTests.swift in Sources */,
 				A10000000000000000000034 /* ReminderParserServiceTests.swift in Sources */,
+				A1000000000000000000006D /* ListClassificationContextTests.swift in Sources */,
 				A10000000000000000000035 /* NotificationSchedulingServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

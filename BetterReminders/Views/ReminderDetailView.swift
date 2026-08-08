@@ -10,6 +10,13 @@ struct ReminderDetailView: View {
     @State private var showingDeleteConfirm = false
     @State private var hasDueDate: Bool
 
+    private let priorityOptions: [(value: Int, label: String)] = [
+        (0, "None"),
+        (1, "Low"),
+        (2, "Medium"),
+        (3, "High"),
+    ]
+
     init(reminder: Reminder) {
         self.reminder = reminder
         _hasDueDate = State(initialValue: reminder.dueDate != nil)
@@ -18,16 +25,9 @@ struct ReminderDetailView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Reminder") {
+                Section {
                     TextField("Title", text: $reminder.title, axis: .vertical)
                         .lineLimit(2...4)
-                    Toggle("Completed", isOn: Binding(
-                        get: { reminder.isCompleted },
-                        set: { newValue in
-                            reminder.setCompleted(newValue)
-                            Task { await reminder.updateNotificationForCompletion() }
-                        }
-                    ))
                     Toggle("Due Date", isOn: $hasDueDate)
                         .onChange(of: hasDueDate) { _, enabled in
                             if enabled {
@@ -49,34 +49,62 @@ struct ReminderDetailView: View {
                             displayedComponents: [.date, .hourAndMinute]
                         )
                     }
-                    Picker("Priority", selection: $reminder.priority) {
-                        Text("None").tag(0)
-                        Text("Low").tag(1)
-                        Text("Medium").tag(2)
-                        Text("High").tag(3)
-                    }
-                }
 
-                Section("List") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Priority")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            ForEach(priorityOptions, id: \.value) { option in
+                                let isSelected = reminder.priority == option.value
+                                let color = Reminder.color(forPriority: option.value)
+                                Button {
+                                    reminder.priority = option.value
+                                } label: {
+                                    Text(option.label)
+                                        .font(.subheadline.weight(.medium))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            isSelected ? color.opacity(0.2) : Color.secondary.opacity(0.08),
+                                            in: Capsule()
+                                        )
+                                        .foregroundStyle(isSelected ? color : .secondary)
+                                        .overlay(
+                                            Capsule()
+                                                .strokeBorder(isSelected ? color : .clear, lineWidth: 1.5)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+
                     Picker("List", selection: Binding(
                         get: { reminder.list?.id ?? allLists.first?.id ?? UUID() },
                         set: { newID in
-                            let oldListName = reminder.list?.name ?? "Unknown"
-                            if let newList = allLists.first(where: { $0.id == newID }) {
+                            let sourceList = reminder.list
+                            if let newList = allLists.first(where: { $0.id == newID }),
+                               sourceList?.id != newList.id {
+                                ReminderList.recordMoveCorrection(
+                                    from: sourceList,
+                                    to: newList,
+                                    reminderTitle: reminder.title
+                                )
                                 reminder.list = newList
-                                if oldListName != newList.name {
-                                    reminder.needsManualSort = false
-                                    AppSettings.shared.recordCorrection(
-                                        from: oldListName,
-                                        to: newList.name,
-                                        reminderTitle: reminder.title
-                                    )
-                                }
+                                reminder.needsManualSort = false
                             }
                         }
                     )) {
                         ForEach(allLists) { list in
-                            Text(list.name).tag(list.id)
+                            Label {
+                                Text(list.name)
+                            } icon: {
+                                Image(systemName: list.icon)
+                                    .foregroundStyle(Color(hex: list.colorHex))
+                            }
+                            .tag(list.id)
                         }
                     }
                 }

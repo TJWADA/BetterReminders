@@ -9,8 +9,12 @@ final class ReminderList {
     var colorHex: String
     var sortOrder: Int
     var isDefault: Bool
+    var listDescription: String = ""
+    var misclassificationLog: [String] = []
     @Relationship(deleteRule: .cascade, inverse: \Reminder.list)
     var reminders: [Reminder]
+
+    static let misclassificationLogLimit = 15
 
     init(
         id: UUID = UUID(),
@@ -19,6 +23,8 @@ final class ReminderList {
         colorHex: String,
         sortOrder: Int,
         isDefault: Bool = false,
+        listDescription: String = "",
+        misclassificationLog: [String] = [],
         reminders: [Reminder] = []
     ) {
         self.id = id
@@ -27,6 +33,8 @@ final class ReminderList {
         self.colorHex = colorHex
         self.sortOrder = sortOrder
         self.isDefault = isDefault
+        self.listDescription = listDescription
+        self.misclassificationLog = misclassificationLog
         self.reminders = reminders
     }
 
@@ -36,5 +44,28 @@ final class ReminderList {
 
     var needsManualSortCount: Int {
         reminders.filter { !$0.isCompleted && $0.needsManualSort }.count
+    }
+
+    func appendMisclassificationNote(_ note: String) {
+        var log = misclassificationLog
+        log.insert(note, at: 0)
+        misclassificationLog = Array(log.prefix(Self.misclassificationLogLimit))
+    }
+
+    static func recordMoveCorrection(
+        from source: ReminderList?,
+        to destination: ReminderList,
+        reminderTitle: String
+    ) {
+        let title = reminderTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let displayTitle = title.isEmpty ? "Untitled" : title
+        let sourceName = source?.name ?? "Unknown"
+
+        source?.appendMisclassificationNote(
+            "Does not belong here (moved to \(destination.name)): '\(displayTitle)'"
+        )
+        destination.appendMisclassificationNote(
+            "Belongs here (moved from \(sourceName)): '\(displayTitle)'"
+        )
     }
 }

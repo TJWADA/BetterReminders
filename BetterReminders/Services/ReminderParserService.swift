@@ -4,36 +4,31 @@ import BetterRemindersCore
 enum ReminderParserService {
     static func parse(
         transcript: String,
-        listNames: [String],
-        recentCorrections: [String] = []
+        listContexts: [ListClassificationContext]
     ) async throws -> ParsedReminderResponse {
         guard let apiKey = KeychainHelper.loadAPIKey(), !apiKey.isEmpty else {
             throw ParserError.missingAPIKey
         }
 
         let now = ISO8601DateFormatter().string(from: Date())
-        let defaultListNames = ListSeeder.defaultLists.map(\.name).joined(separator: ", ")
-        let listsText = listNames.isEmpty ? defaultListNames : listNames.joined(separator: ", ")
-        let correctionsText = recentCorrections.isEmpty
-            ? "None"
-            : recentCorrections.joined(separator: "; ")
         let fallbackList = AppConfiguration.fallbackListName
+        let contexts = listContexts.isEmpty
+            ? ListSeeder.defaultLists.map {
+                ListClassificationContext(
+                    name: $0.name,
+                    description: $0.description,
+                    exampleTitles: [],
+                    misclassificationNotes: []
+                )
+            }
+            : listContexts
+        let listsText = ListClassificationContext.formatListsBlock(contexts)
 
-        let systemPrompt = """
-        You extract structured reminders from voice transcripts.
-        Current date/time: \(now)
-        Available lists: \(listsText)
-        Recent user corrections: \(correctionsText)
-
-        Rules:
-        - Return JSON only with keys "reminders" and "confidence".
-        - Each reminder has: title, list, dueDate (ISO8601 or null), priority (none|low|medium|high).
-        - Pick the best matching list from available lists.
-        - If none fit, use "\(fallbackList)".
-        - Support multiple reminders from one transcript.
-        - Summarize titles concisely (under 80 chars).
-        - Parse relative dates like "tomorrow", "next Tuesday", "in 2 hours".
-        """
+        let systemPrompt = makeSystemPrompt(
+            now: now,
+            listsText: listsText,
+            fallbackList: fallbackList
+        )
 
         let body: [String: Any] = [
             "model": AppConfiguration.OpenAI.model,
@@ -65,6 +60,26 @@ enum ReminderParserService {
         }
 
         return try parseResponseContent(content, fallbackList: fallbackList)
+    }
+
+    static func makeSystemPrompt(now: String, listsText: String, fallbackList: String) -> String {
+        """
+        You extract structured reminders from voice transcripts.
+        Current date/time: \(now)
+        Available lists:
+        \(listsText)
+
+        Use each list's description, current incomplete reminders, and past corrections to choose the best list.
+
+        Rules:
+        - Return JSON only with keys "reminders" and "confidence".
+        - Each reminder has: title, list, dueDate (ISO8601 or null), priority (none|low|medium|high).
+        - Pick the best matching list from available lists.
+        - If none fit, use "\(fallbackList)".
+        - Support multiple reminders from one transcript.
+        - Summarize titles concisely (under 80 chars).
+        - Parse relative dates like "tomorrow", "next Tuesday", "in 2 hours".
+        """
     }
 
     static func validateAPIKey() async throws {

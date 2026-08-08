@@ -8,24 +8,28 @@ enum ListEditActions {
         name: String,
         icon: String,
         colorHex: String,
+        listDescription: String,
         existingList: ReminderList?,
         allLists: [ReminderList],
         modelContext: ModelContext
     ) -> Bool {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
+        let trimmedDescription = listDescription.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let list = existingList {
             list.name = trimmed
             list.icon = icon
             list.colorHex = colorHex
+            list.listDescription = trimmedDescription
         } else {
             let nextOrder = (allLists.map(\.sortOrder).max() ?? -1) + 1
             let list = ReminderList(
                 name: trimmed,
                 icon: icon,
                 colorHex: colorHex,
-                sortOrder: nextOrder
+                sortOrder: nextOrder,
+                listDescription: trimmedDescription
             )
             modelContext.insert(list)
         }
@@ -113,6 +117,7 @@ struct ListEditView: View {
     @State private var name: String
     @State private var icon: String
     @State private var colorHex: String
+    @State private var listDescription: String
     @State private var showingDeleteConfirm = false
     @FocusState private var isNameFieldFocused: Bool
 
@@ -121,6 +126,7 @@ struct ListEditView: View {
         _name = State(initialValue: list?.name ?? "")
         _icon = State(initialValue: list?.icon ?? ListStyle.presetIcons[0])
         _colorHex = State(initialValue: list?.colorHex ?? ListStyle.presetColors[0])
+        _listDescription = State(initialValue: list?.listDescription ?? "")
     }
 
     private var isValid: Bool {
@@ -142,6 +148,23 @@ struct ListEditView: View {
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                                     .strokeBorder(Color.secondary.opacity(0.35), lineWidth: 1.5)
                             }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Description:")
+                            .foregroundStyle(.secondary)
+                        TextField(
+                            "e.g. CSE 121 programming class. Prefer short titles like \"Finish Lab 3\".",
+                            text: $listDescription,
+                            axis: .vertical
+                        )
+                        .lineLimit(3...6)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(Color.secondary.opacity(0.35), lineWidth: 1.5)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 10) {
@@ -210,6 +233,7 @@ struct ListEditView: View {
             name: name,
             icon: icon,
             colorHex: colorHex,
+            listDescription: listDescription,
             existingList: existingList,
             allLists: allLists,
             modelContext: modelContext

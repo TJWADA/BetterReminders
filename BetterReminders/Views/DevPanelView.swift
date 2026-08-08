@@ -7,6 +7,7 @@ struct DevPanelView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \ProcessingJob.createdAt, order: .reverse) private var jobs: [ProcessingJob]
+    @Query(sort: \ReminderList.sortOrder) private var lists: [ReminderList]
 
     @Bindable private var recorder = AudioRecordingService.shared
     @State private var processor = ReminderProcessingService.shared
@@ -26,6 +27,7 @@ struct DevPanelView: View {
         NavigationStack {
             Form {
                 statusSection
+                classificationFeedbackSection
                 if hasRecentActivity {
                     jobsSection
                 }
@@ -56,6 +58,35 @@ struct DevPanelView: View {
             statusRow("Microphone", value: micGranted ? "Granted" : "Denied", isGood: micGranted)
             statusRow("Speech", value: speechGranted ? "Granted" : "Denied", isGood: speechGranted)
             statusRow("Notifications", value: notificationsGranted ? "Granted" : "Denied", isGood: notificationsGranted)
+        }
+    }
+
+    private var classificationFeedbackSection: some View {
+        Section("Classification Feedback") {
+            if lists.isEmpty {
+                Text("No lists")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(lists) { list in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(list.name)
+                            .font(.subheadline.weight(.semibold))
+                        if list.misclassificationLog.isEmpty {
+                            Text("None")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(list.misclassificationLog, id: \.self) { note in
+                                Text(note)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .textSelection(.enabled)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
         }
     }
 
