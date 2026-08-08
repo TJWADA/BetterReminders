@@ -21,11 +21,6 @@ struct ListDetailView: View {
     @State private var recordingError: String?
     @State private var actionButtonError: String?
 
-    @Namespace private var recordingNamespace
-    @Namespace private var searchNamespace
-
-    private let fadeExtension: CGFloat = 48
-
     private var listReminders: [Reminder] {
         let inList = allReminders.filter { $0.list?.id == list.id }
         return ReminderFilters.sortForListView(
@@ -35,6 +30,13 @@ struct ListDetailView: View {
                 hideCompleted: settings.hideCompleted,
                 priorityFilter: .all
             )
+        )
+    }
+
+    private var isRecordingPresented: Binding<Bool> {
+        Binding(
+            get: { recorder.isRecording },
+            set: { _ in }
         )
     }
 
@@ -63,49 +65,50 @@ struct ListDetailView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .scrollClipDisabled()
         }
-        .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .bottom) {
-            GeometryReader { geometry in
-                VStack {
-                    Spacer(minLength: 0)
-                    ScrollEdgeFade(isTop: false)
-                        .frame(height: geometry.safeAreaInsets.bottom + 76 + fadeExtension)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    showingTaskSearch = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+
+                Button {
+                    showingAddReminder = true
+                } label: {
+                    Image(systemName: "square.and.pencil")
+                }
+
+                Button {
+                    Task { await toggleRecording() }
+                } label: {
+                    Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                }
+                .disabled(processor.isProcessing)
+                .tint(recorder.isRecording ? .red : .accentColor)
+
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape.fill")
                 }
             }
-            .ignoresSafeArea(edges: .bottom)
-            .allowsHitTesting(false)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: 76)
+            statusBanner
         }
-        .overlay(alignment: .bottom) {
-            bottomActionBar
+        .fullScreenCover(isPresented: isRecordingPresented) {
+            RecordingSheetView(
+                recorder: recorder,
+                displayTick: displayTick,
+                onStop: { Task { await toggleRecording() } }
+            )
         }
-        .overlay {
-            if recorder.isRecording {
-                RecordingExpandedOverlay(
-                    recorder: recorder,
-                    displayTick: displayTick,
-                    namespace: recordingNamespace,
-                    onStop: { Task { await toggleRecording() } }
-                )
-                .transition(.identity)
-                .zIndex(2)
-            }
-
-            if showingTaskSearch {
-                GlobalTaskSearchOverlay(
-                    isPresented: $showingTaskSearch,
-                    namespace: searchNamespace
-                )
-                .transition(.identity)
-                .zIndex(1)
-            }
+        .sheet(isPresented: $showingTaskSearch) {
+            GlobalTaskSearchView()
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.82), value: recorder.isRecording)
-        .animation(.spring(response: 0.45, dampingFraction: 0.82), value: showingTaskSearch)
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
@@ -125,6 +128,11 @@ struct ListDetailView: View {
         } message: {
             Text(actionButtonError ?? "Could not start recording.")
         }
+        .onAppear {
+            if recorder.isRecording {
+                startDisplayTimer()
+            }
+        }
         .actionButtonRecordingHandlers(
             recorder: recorder,
             actionButtonError: $actionButtonError,
@@ -142,6 +150,21 @@ struct ListDetailView: View {
         )
     }
 
+    @ViewBuilder
+    private var statusBanner: some View {
+        if !recorder.isRecording {
+            if processor.isProcessing {
+                ProcessingBannerView(
+                    status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
+                )
+            } else if let error = recordingError {
+                RecordingErrorBannerView(message: error) {
+                    recordingError = nil
+                }
+            }
+        }
+    }
+
     private var listHeader: some View {
         let theme = ListColorTheme(colorHex: list.colorHex)
 
@@ -150,58 +173,10 @@ struct ListDetailView: View {
             Text(list.name)
                 .font(.headline)
             Spacer()
-            Button {
-                showingSettings = true
-            } label: {
-                Image(systemName: "gearshape.fill")
-            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .background(theme.headerGradient)
-    }
-
-    private var bottomActionBar: some View {
-        VStack(spacing: 0) {
-            if !recorder.isRecording {
-                if processor.isProcessing {
-                    ProcessingBannerView(
-                        status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
-                    )
-                } else if let error = recordingError {
-                    RecordingErrorBannerView(message: error) {
-                        recordingError = nil
-                    }
-                }
-            }
-
-            HStack(spacing: 0) {
-                CornerActionButton(
-                    icon: "magnifyingglass",
-                    namespace: searchNamespace,
-                    geometryID: "searchExpand",
-                    isExpanded: showingTaskSearch
-                ) {
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                        showingTaskSearch = true
-                    }
-                }
-                Spacer(minLength: 0)
-                CornerActionButton(icon: "square.and.pencil") {
-                    showingAddReminder = true
-                }
-                RecordButtonView(
-                    recorder: recorder,
-                    isProcessing: processor.isProcessing,
-                    namespace: recordingNamespace,
-                    isExpanded: recorder.isRecording
-                ) {
-                    Task { await toggleRecording() }
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-        }
     }
 
     private func toggleRecording() async {

@@ -2,9 +2,8 @@ import SwiftUI
 import SwiftData
 import BetterRemindersCore
 
-struct GlobalTaskSearchOverlay: View {
-    @Binding var isPresented: Bool
-    var namespace: Namespace.ID
+struct GlobalTaskSearchView: View {
+    @Environment(\.dismiss) private var dismiss
 
     @Query(sort: \Reminder.createdAt, order: .reverse) private var allReminders: [Reminder]
     @State private var settings = AppSettings.shared
@@ -12,7 +11,6 @@ struct GlobalTaskSearchOverlay: View {
     @State private var sortMode: ReminderSortMode = .dueDate
     @State private var priorityFilter: PriorityFilter = .all
     @FocusState private var searchFocused: Bool
-    @State private var contentVisible = false
 
     private var filteredReminders: [Reminder] {
         ReminderFilters.sort(
@@ -27,71 +25,52 @@ struct GlobalTaskSearchOverlay: View {
     }
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: contentVisible ? 0 : 22, style: .continuous)
-                .fill(Color(.systemBackground))
-                .matchedGeometryEffect(id: "searchExpand", in: namespace)
-                .ignoresSafeArea()
-
-            NavigationStack {
-                VStack(spacing: 0) {
-                    searchHeader
-                    sortBar
-                    resultsList
+        NavigationStack {
+            VStack(spacing: 0) {
+                searchHeader
+                sortBar
+                resultsList
+            }
+            .navigationTitle("Search")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
-                .opacity(contentVisible ? 1 : 0)
-                .offset(y: contentVisible ? 0 : 16)
             }
         }
         .onAppear {
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(350))
-                searchFocused = true
-            }
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.82).delay(0.12)) {
-                contentVisible = true
-            }
+            searchFocused = true
         }
         .onDisappear {
             searchFocused = false
-            contentVisible = false
             searchText = ""
         }
     }
 
     private var searchHeader: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                TextField("Search tasks", text: $searchText)
-                    .autocorrectionDisabled()
-                    .focused($searchFocused)
-                if !searchText.isEmpty {
-                    Button {
-                        searchText = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("Search tasks", text: $searchText)
+                .autocorrectionDisabled()
+                .focused($searchFocused)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            Button {
-                dismissSearch()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 36, height: 36)
-                    .background(Color.secondary.opacity(0.1), in: Circle())
-            }
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .padding(.horizontal, 16)
-        .padding(.top, 12)
+        .padding(.top, 8)
         .padding(.bottom, 8)
     }
 
@@ -103,9 +82,7 @@ struct GlobalTaskSearchOverlay: View {
                         label: mode.label,
                         isSelected: sortMode == mode
                     ) {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            sortMode = mode
-                        }
+                        sortMode = mode
                     }
                 }
 
@@ -149,16 +126,6 @@ struct GlobalTaskSearchOverlay: View {
                 }
             }
             .listStyle(.plain)
-        }
-    }
-
-    private func dismissSearch() {
-        searchFocused = false
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-            contentVisible = false
-        }
-        Task { @MainActor in
-            isPresented = false
         }
     }
 }
