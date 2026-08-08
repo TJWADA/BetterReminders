@@ -33,4 +33,8 @@ final class ReminderList {
     var incompleteCount: Int {
         reminders.filter { !$0.isCompleted }.count
     }
+
+    var needsManualSortCount: Int {
+        reminders.filter { !$0.isCompleted && $0.needsManualSort }.count
+    }
 }

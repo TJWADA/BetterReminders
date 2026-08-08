@@ -13,23 +13,24 @@ struct ListDetailView: View {
 
     @State private var showingSettings = false
     @State private var showingTaskSearch = false
-    @State private var showingAddReminder = false
+    @State private var editingReminder: Reminder?
 
     @State private var displayTick = 0
     @State private var displayTimer: Timer?
+    @State private var listRefreshTick = 0
     @State private var permissionDenied = false
     @State private var recordingError: String?
     @State private var actionButtonError: String?
 
+    @State private var newReminderTitle = ""
+    @State private var expandedReminderID: UUID?
+    @FocusState private var isNewReminderFocused: Bool
+
     private var listReminders: [Reminder] {
+        _ = listRefreshTick
         let inList = allReminders.filter { $0.list?.id == list.id }
         return ReminderFilters.sortForListView(
-            ReminderFilters.apply(
-                to: inList,
-                searchText: "",
-                hideCompleted: settings.hideCompleted,
-                priorityFilter: .all
-            )
+            ReminderFilters.visibleInList(inList)
         )
     }
 
@@ -41,31 +42,39 @@ struct ListDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            listHeader
-
-            Group {
-                if listReminders.isEmpty {
-                    ContentUnavailableView(
-                        "No Reminders",
-                        systemImage: "checklist",
-                        description: Text("Tap the keyboard or mic to add a reminder.")
-                    )
-                } else {
-                    List {
-                        ForEach(listReminders) { reminder in
-                            NavigationLink {
-                                ReminderDetailView(reminder: reminder)
-                            } label: {
-                                ReminderRowView(reminder: reminder)
+        List {
+            ForEach(listReminders) { reminder in
+                ReminderRowView(
+                    reminder: reminder,
+                    isExpanded: expandedReminderID == reminder.id,
+                    onToggleExpand: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            if expandedReminderID == reminder.id {
+                                expandedReminderID = nil
+                            } else {
+                                expandedReminderID = reminder.id
                             }
                         }
+                    },
+                    onCompletionChanged: {
+                        scheduleGraceRefresh()
                     }
-                    .listStyle(.plain)
+                )
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("Edit") {
+                        editingReminder = reminder
+                    }
+                    .tint(.accentColor)
+                }
+                .onChange(of: reminder.dueDate) { _, _ in
+                    Task { await NotificationSchedulingService.schedule(for: reminder) }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            newReminderRow
         }
+        .listStyle(.plain)
+        .navigationTitle(list.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
@@ -73,12 +82,6 @@ struct ListDetailView: View {
                     showingTaskSearch = true
                 } label: {
                     Image(systemName: "magnifyingglass")
-                }
-
-                Button {
-                    showingAddReminder = true
-                } label: {
-                    Image(systemName: "square.and.pencil")
                 }
 
                 Button {
@@ -112,8 +115,8 @@ struct ListDetailView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
-        .sheet(isPresented: $showingAddReminder) {
-            AddReminderSheet(list: list)
+        .sheet(item: $editingReminder) { reminder in
+            ReminderDetailView(reminder: reminder)
         }
         .alert("Microphone Access Required", isPresented: $permissionDenied) {
             Button("OK", role: .cancel) {}
@@ -133,6 +136,9 @@ struct ListDetailView: View {
                 startDisplayTimer()
             }
         }
+        .onDisappear {
+            try? modelContext.save()
+        }
         .actionButtonRecordingHandlers(
             recorder: recorder,
             actionButtonError: $actionButtonError,
@@ -150,6 +156,21 @@ struct ListDetailView: View {
         )
     }
 
+    private var newReminderRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "circle")
+                .foregroundStyle(.secondary)
+                .font(.title3)
+
+            TextField("New Reminder", text: $newReminderTitle)
+                .focused($isNewReminderFocused)
+                .onSubmit {
+                    commitNewReminder()
+                }
+        }
+        .padding(.vertical, 2)
+    }
+
     @ViewBuilder
     private var statusBanner: some View {
         if !recorder.isRecording {
@@ -165,18 +186,25 @@ struct ListDetailView: View {
         }
     }
 
-    private var listHeader: some View {
-        let theme = ListColorTheme(colorHex: list.colorHex)
+    private func commitNewReminder() {
+        let trimmed = newReminderTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
 
-        return HStack(spacing: 8) {
-            ListTileIcon(icon: list.icon, colorHex: list.colorHex)
-            Text(list.name)
-                .font(.headline)
-            Spacer()
+        let reminder = Reminder(title: trimmed, list: list)
+        modelContext.insert(reminder)
+        try? modelContext.save()
+        newReminderTitle = ""
+        HapticHelper.selection()
+        isNewReminderFocused = true
+    }
+
+    private func scheduleGraceRefresh() {
+        listRefreshTick += 1
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(ReminderFilters.completionGracePeriod))
+            listRefreshTick += 1
+            try? modelContext.save()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(theme.headerGradient)
     }
 
     private func toggleRecording() async {

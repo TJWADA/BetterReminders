@@ -6,22 +6,33 @@ struct GlobalTaskSearchView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Query(sort: \Reminder.createdAt, order: .reverse) private var allReminders: [Reminder]
-    @State private var settings = AppSettings.shared
     @State private var searchText = ""
     @State private var sortMode: ReminderSortMode = .dueDate
     @State private var priorityFilter: PriorityFilter = .all
+    @State private var editingReminder: Reminder?
     @FocusState private var searchFocused: Bool
 
-    private var filteredReminders: [Reminder] {
+    private var activeReminders: [Reminder] {
         ReminderFilters.sort(
             ReminderFilters.apply(
                 to: allReminders,
                 searchText: searchText,
-                hideCompleted: settings.hideCompleted,
+                hideCompleted: true,
                 priorityFilter: priorityFilter
             ),
             by: sortMode
         )
+    }
+
+    private var recentlyCompletedReminders: [Reminder] {
+        let completed = ReminderFilters.recentlyCompleted(allReminders)
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return completed }
+        return completed.filter {
+            $0.title.localizedCaseInsensitiveContains(query)
+                || $0.rawTranscript.localizedCaseInsensitiveContains(query)
+                || ($0.list?.name.localizedCaseInsensitiveContains(query) ?? false)
+        }
     }
 
     var body: some View {
@@ -40,6 +51,9 @@ struct GlobalTaskSearchView: View {
                     }
                 }
             }
+        }
+        .sheet(item: $editingReminder) { reminder in
+            ReminderDetailView(reminder: reminder)
         }
         .onAppear {
             searchFocused = true
@@ -92,7 +106,6 @@ struct GlobalTaskSearchView: View {
                             Text(filter.label).tag(filter)
                         }
                     }
-                    Toggle("Hide Completed", isOn: $settings.hideCompleted)
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "line.3.horizontal.decrease")
@@ -112,16 +125,30 @@ struct GlobalTaskSearchView: View {
 
     @ViewBuilder
     private var resultsList: some View {
-        if filteredReminders.isEmpty {
+        if activeReminders.isEmpty && recentlyCompletedReminders.isEmpty {
             ContentUnavailableView.search(text: searchText)
                 .frame(maxHeight: .infinity)
         } else {
             List {
-                ForEach(filteredReminders) { reminder in
-                    NavigationLink {
-                        ReminderDetailView(reminder: reminder)
+                ForEach(activeReminders) { reminder in
+                    Button {
+                        editingReminder = reminder
                     } label: {
                         GlobalSearchReminderRow(reminder: reminder)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if !recentlyCompletedReminders.isEmpty {
+                    DisclosureGroup("Recently Completed") {
+                        ForEach(recentlyCompletedReminders) { reminder in
+                            Button {
+                                editingReminder = reminder
+                            } label: {
+                                GlobalSearchReminderRow(reminder: reminder)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
             }
@@ -160,10 +187,17 @@ struct GlobalSearchReminderRow: View {
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(reminder.title)
-                    .strikethrough(reminder.isCompleted)
-                    .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
-                    .lineLimit(2)
+                HStack(spacing: 6) {
+                    if reminder.needsManualSort {
+                        Circle()
+                            .fill(Color.orange)
+                            .frame(width: 7, height: 7)
+                    }
+                    Text(reminder.title)
+                        .strikethrough(reminder.isCompleted)
+                        .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
+                        .lineLimit(2)
+                }
 
                 HStack(spacing: 8) {
                     if let list = reminder.list {

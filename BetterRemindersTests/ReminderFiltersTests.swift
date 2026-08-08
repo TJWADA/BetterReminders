@@ -104,4 +104,41 @@ final class ReminderFiltersTests: XCTestCase {
         let sorted = ReminderFilters.sortByDueDate([later, sooner])
         XCTAssertEqual(sorted.map(\.title), ["Sooner", "Later"])
     }
+
+    func testVisibleInListKeepsGracePeriodCompletions() {
+        let open = TestFixtures.makeReminder(title: "Open", list: list)
+        let inGrace = TestFixtures.makeReminder(
+            title: "Grace",
+            isCompleted: true,
+            completedAt: now.addingTimeInterval(-1),
+            list: list
+        )
+        let expired = TestFixtures.makeReminder(
+            title: "Gone",
+            isCompleted: true,
+            completedAt: now.addingTimeInterval(-4),
+            list: list
+        )
+
+        let visible = ReminderFilters.visibleInList([open, inGrace, expired], now: now)
+        XCTAssertEqual(visible.map(\.title), ["Open", "Grace"])
+    }
+
+    func testRecentlyCompletedFiltersLastSevenDays() {
+        let recent = TestFixtures.makeReminder(
+            title: "Recent",
+            isCompleted: true,
+            completedAt: now.addingTimeInterval(-86_400),
+            list: list
+        )
+        let old = TestFixtures.makeReminder(
+            title: "Old",
+            isCompleted: true,
+            completedAt: now.addingTimeInterval(-864_000),
+            list: list
+        )
+
+        let recentItems = ReminderFilters.recentlyCompleted([recent, old], now: now)
+        XCTAssertEqual(recentItems.map(\.title), ["Recent"])
+    }
 }

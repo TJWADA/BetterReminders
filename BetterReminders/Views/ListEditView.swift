@@ -41,175 +41,66 @@ enum ListEditActions {
     }
 }
 
-struct ListIconPickerRow: View {
+struct ListColorGrid: View {
+    @Binding var colorHex: String
+
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 6)
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(ListStyle.presetColors, id: \.self) { hex in
+                Button {
+                    colorHex = hex
+                    HapticHelper.selection()
+                } label: {
+                    Circle()
+                        .fill(Color(hex: hex))
+                        .frame(width: 36, height: 36)
+                        .overlay {
+                            if colorHex == hex {
+                                Circle()
+                                    .fill(.white)
+                                    .frame(width: 10, height: 10)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+struct ListIconGrid: View {
     @Binding var icon: String
     var colorHex: String
-    var compact: Bool = false
 
-    private var cellSize: CGFloat { compact ? 36 : 44 }
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: compact ? 8 : 12) {
-                ForEach(ListStyle.presetIcons, id: \.self) { symbol in
-                    Button {
-                        icon = symbol
-                        HapticHelper.selection()
-                    } label: {
-                        Image(systemName: symbol)
-                            .font(compact ? .body : .title2)
-                            .frame(width: cellSize, height: cellSize)
-                            .background(
-                                icon == symbol
-                                    ? Color(hex: colorHex).opacity(0.2)
-                                    : Color.secondary.opacity(0.08),
-                                in: RoundedRectangle(cornerRadius: compact ? 8 : 10)
-                            )
-                            .foregroundStyle(
-                                icon == symbol ? Color(hex: colorHex) : .secondary
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, compact ? 16 : 0)
-        }
-    }
-}
-
-struct ListColorPickerRow: View {
-    @Binding var colorHex: String
-    var compact: Bool = false
-
-    private var cellSize: CGFloat { compact ? 32 : 36 }
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 6)
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: compact ? 10 : 12) {
-                ForEach(ListStyle.presetColors, id: \.self) { hex in
-                    Button {
-                        colorHex = hex
-                        HapticHelper.selection()
-                    } label: {
-                        Circle()
-                            .fill(Color(hex: hex))
-                            .frame(width: cellSize, height: cellSize)
-                            .overlay {
-                                if colorHex == hex {
-                                    Image(systemName: "checkmark")
-                                        .font(.caption2.bold())
-                                        .foregroundStyle(.white)
-                                }
+        LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(ListStyle.presetIcons, id: \.self) { symbol in
+                Button {
+                    icon = symbol
+                    HapticHelper.selection()
+                } label: {
+                    Image(systemName: symbol)
+                        .font(.body)
+                        .frame(width: 40, height: 40)
+                        .foregroundStyle(icon == symbol ? Color(hex: colorHex) : .secondary)
+                        .background(
+                            Circle()
+                                .fill(icon == symbol ? Color(hex: colorHex).opacity(0.18) : Color.secondary.opacity(0.08))
+                        )
+                        .overlay {
+                            if icon == symbol {
+                                Circle()
+                                    .strokeBorder(Color(hex: colorHex), lineWidth: 2)
                             }
-                    }
-                    .buttonStyle(.plain)
+                        }
                 }
-            }
-            .padding(.horizontal, compact ? 16 : 0)
-        }
-    }
-}
-
-struct ListEditCompactView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    @Bindable var list: ReminderList
-
-    @State private var name: String
-    @State private var icon: String
-    @State private var colorHex: String
-    @State private var showingDeleteConfirm = false
-    @FocusState private var isNameFieldFocused: Bool
-
-    init(list: ReminderList) {
-        self.list = list
-        _name = State(initialValue: list.name)
-        _icon = State(initialValue: list.icon)
-        _colorHex = State(initialValue: list.colorHex)
-    }
-
-    private var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                TextField("List name", text: $name)
-                    .font(.body)
-                    .focused($isNameFieldFocused)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-
-                Button("Save") { save() }
-                    .font(.body.weight(.semibold))
-                    .disabled(!isValid)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Icon")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 16)
-                ListIconPickerRow(icon: $icon, colorHex: colorHex, compact: true)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Color")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 16)
-                ListColorPickerRow(colorHex: $colorHex, compact: true)
-            }
-
-            ListIconTile(
-                name: name.isEmpty ? list.name : name,
-                icon: icon,
-                colorHex: colorHex,
-                incompleteCount: list.incompleteCount
-            )
-            .frame(maxWidth: 180)
-            .padding(.horizontal, 16)
-
-            Spacer(minLength: 0)
-
-            Button("Delete List", role: .destructive) {
-                showingDeleteConfirm = true
-            }
-            .padding(.bottom, 8)
-        }
-        .confirmationDialog(
-            "Delete this list and all its reminders?",
-            isPresented: $showingDeleteConfirm,
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                ListEditActions.delete(list: list, modelContext: modelContext)
-                closeSheet()
+                .buttonStyle(.plain)
             }
         }
-    }
-
-    private func closeSheet() {
-        isNameFieldFocused = false
-        Task { @MainActor in
-            dismiss()
-        }
-    }
-
-    private func save() {
-        guard ListEditActions.save(
-            name: name,
-            icon: icon,
-            colorHex: colorHex,
-            existingList: list,
-            allLists: [],
-            modelContext: modelContext
-        ) else { return }
-        closeSheet()
     }
 }
 
@@ -232,86 +123,77 @@ struct ListEditView: View {
         _colorHex = State(initialValue: list?.colorHex ?? ListStyle.presetColors[0])
     }
 
-    private var previewName: String {
-        name.isEmpty ? (existingList == nil ? "New List" : "List name") : name
-    }
-
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
             ScrollView {
-                VStack(spacing: 20) {
-                    ListIconTile(
-                        name: previewName,
-                        icon: icon,
-                        colorHex: colorHex,
-                        incompleteCount: existingList?.incompleteCount ?? 0
-                    )
-                    .frame(maxWidth: 180)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Name")
-                            .font(.caption.weight(.medium))
+                VStack(alignment: .leading, spacing: 20) {
+                    HStack(spacing: 10) {
+                        Text("Name:")
                             .foregroundStyle(.secondary)
                         TextField("List name", text: $name)
                             .focused($isNameFieldFocused)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-                    }
-                    .padding(.horizontal, 16)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Icon")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 16)
-                        ListIconPickerRow(icon: $icon, colorHex: colorHex, compact: true)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .strokeBorder(Color.secondary.opacity(0.35), lineWidth: 1.5)
+                            }
                     }
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Color")
-                            .font(.caption.weight(.medium))
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Color:")
                             .foregroundStyle(.secondary)
-                            .padding(.horizontal, 16)
-                        ListColorPickerRow(colorHex: $colorHex, compact: true)
+                        ListColorGrid(colorHex: $colorHex)
+                    }
+
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Icon:")
+                            .foregroundStyle(.secondary)
+                        ListIconGrid(icon: $icon, colorHex: colorHex)
                     }
 
                     if existingList != nil {
                         Button("Delete List", role: .destructive) {
                             showingDeleteConfirm = true
                         }
-                        .padding(.top, 8)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 4)
                     }
                 }
-                .padding(.bottom, 24)
+                .padding(20)
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle(existingList == nil ? "New List" : "Edit List")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { closeSheet() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(!isValid)
-                }
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button("Cancel") { closeSheet() }
+                    .buttonStyle(.bordered)
+                Button("OK") { save() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!isValid)
             }
-            .confirmationDialog(
-                "Delete this list and all its reminders?",
-                isPresented: $showingDeleteConfirm,
-                titleVisibility: .visible
-            ) {
-                Button("Delete", role: .destructive) {
-                    deleteList()
-                }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+        }
+        .confirmationDialog(
+            "Delete this list and all its reminders?",
+            isPresented: $showingDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                deleteList()
             }
+        }
+        .onAppear {
+            isNameFieldFocused = existingList == nil
         }
     }
 

@@ -4,6 +4,7 @@ import BetterRemindersCore
 
 enum ListSeeder {
     static let defaultLists: [(name: String, icon: String, colorHex: String)] = [
+        ("General", "tray.fill", "8E8E93"),
         ("Groceries", "cart.fill", "34C759"),
         ("Work", "briefcase.fill", "007AFF"),
         ("Personal", "person.fill", "AF52DE"),
@@ -28,6 +29,25 @@ enum ListSeeder {
         }
 
         AppSettings.shared.hasSeededLists = true
+        try? modelContext.save()
+    }
+
+    @MainActor
+    static func ensureGeneralListExists(modelContext: ModelContext) {
+        let lists = (try? modelContext.fetch(FetchDescriptor<ReminderList>())) ?? []
+        if findList(named: AppConfiguration.fallbackListName, in: lists) != nil {
+            return
+        }
+
+        let minOrder = lists.map(\.sortOrder).min() ?? 0
+        let general = ReminderList(
+            name: "General",
+            icon: "tray.fill",
+            colorHex: "8E8E93",
+            sortOrder: minOrder - 1,
+            isDefault: true
+        )
+        modelContext.insert(general)
         try? modelContext.save()
     }
 

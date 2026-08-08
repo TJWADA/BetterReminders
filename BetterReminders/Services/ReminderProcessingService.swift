@@ -180,18 +180,26 @@ final class ReminderProcessingService {
         var firstListName: String?
         var firstListIcon: String?
 
+        let fallbackName = AppConfiguration.fallbackListName.lowercased()
+
         for item in items {
-            let targetList = ListSeeder.findList(named: item.list, in: lists)
+            let matchedList = ListSeeder.findList(named: item.list, in: lists)
+            let targetList = matchedList
                 ?? defaultList
                 ?? ListSeeder.fallbackList(from: lists)
 
             guard let targetList else { continue }
+
+            let usedFallback = matchedList == nil
+                || targetList.name.lowercased() == fallbackName
+                || item.list.lowercased() == fallbackName
 
             let reminder = Reminder(
                 title: item.title,
                 rawTranscript: transcript,
                 dueDate: ReminderParserService.parseDueDate(item.dueDate),
                 priority: ReminderParserService.priorityValue(from: item.priority),
+                needsManualSort: usedFallback && targetList.name.lowercased() == fallbackName,
                 audioFilePath: retainAudioPath,
                 list: targetList
             )

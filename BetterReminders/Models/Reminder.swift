@@ -9,6 +9,8 @@ final class Reminder {
     var dueDate: Date?
     var priority: Int
     var isCompleted: Bool
+    var completedAt: Date?
+    var needsManualSort: Bool
     var createdAt: Date
     var audioFilePath: String?
     var list: ReminderList?
@@ -20,6 +22,8 @@ final class Reminder {
         dueDate: Date? = nil,
         priority: Int = 0,
         isCompleted: Bool = false,
+        completedAt: Date? = nil,
+        needsManualSort: Bool = false,
         createdAt: Date = Date(),
         audioFilePath: String? = nil,
         list: ReminderList? = nil
@@ -30,6 +34,8 @@ final class Reminder {
         self.dueDate = dueDate
         self.priority = priority
         self.isCompleted = isCompleted
+        self.completedAt = completedAt ?? (isCompleted ? createdAt : nil)
+        self.needsManualSort = needsManualSort
         self.createdAt = createdAt
         self.audioFilePath = audioFilePath
         self.list = list
@@ -42,5 +48,10 @@ final class Reminder {
         case 1: return "Low"
         default: return "None"
         }
+    }
+
+    func setCompleted(_ completed: Bool, at date: Date = Date()) {
+        isCompleted = completed
+        completedAt = completed ? date : nil
     }
 }

@@ -43,6 +43,9 @@ enum PriorityFilter: Int, CaseIterable, Identifiable {
 }
 
 enum ReminderFilters {
+    static let completionGracePeriod: TimeInterval = 3
+    static let recentlyCompletedDays = 7
+
     static func apply(
         to reminders: [Reminder],
         searchText: String,
@@ -69,6 +72,35 @@ enum ReminderFilters {
         }
 
         return result
+    }
+
+    /// Incomplete reminders, plus completed ones still inside the grace buffer.
+    static func visibleInList(
+        _ reminders: [Reminder],
+        now: Date = Date(),
+        gracePeriod: TimeInterval = completionGracePeriod
+    ) -> [Reminder] {
+        reminders.filter { reminder in
+            if !reminder.isCompleted { return true }
+            guard let completedAt = reminder.completedAt else { return false }
+            return now.timeIntervalSince(completedAt) < gracePeriod
+        }
+    }
+
+    static func recentlyCompleted(
+        _ reminders: [Reminder],
+        now: Date = Date(),
+        withinDays: Int = recentlyCompletedDays
+    ) -> [Reminder] {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -withinDays, to: now) ?? now
+        return reminders
+            .filter { reminder in
+                guard reminder.isCompleted, let completedAt = reminder.completedAt else { return false }
+                return completedAt >= cutoff
+            }
+            .sorted { lhs, rhs in
+                (lhs.completedAt ?? .distantPast) > (rhs.completedAt ?? .distantPast)
+            }
     }
 
     static func sortByDueDate(_ reminders: [Reminder]) -> [Reminder] {

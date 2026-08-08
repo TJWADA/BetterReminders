@@ -81,19 +81,22 @@ struct ListIconTile: View {
     let icon: String
     let colorHex: String
     var incompleteCount: Int = 0
+    var needsManualSortCount: Int = 0
 
     init(list: ReminderList) {
         self.name = list.name
         self.icon = list.icon
         self.colorHex = list.colorHex
         self.incompleteCount = list.incompleteCount
+        self.needsManualSortCount = list.needsManualSortCount
     }
 
-    init(name: String, icon: String, colorHex: String, incompleteCount: Int = 0) {
+    init(name: String, icon: String, colorHex: String, incompleteCount: Int = 0, needsManualSortCount: Int = 0) {
         self.name = name
         self.icon = icon
         self.colorHex = colorHex
         self.incompleteCount = incompleteCount
+        self.needsManualSortCount = needsManualSortCount
     }
 
     private var theme: ListColorTheme { ListColorTheme(colorHex: colorHex) }
@@ -111,11 +114,21 @@ struct ListIconTile: View {
                 HStack(alignment: .top) {
                     ListTileIcon(icon: icon, colorHex: colorHex)
                     Spacer(minLength: 4)
-                    Text("\(incompleteCount)")
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                        .foregroundStyle(theme.baseColor.opacity(0.75))
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("\(incompleteCount)")
+                            .font(.system(size: 22, weight: .semibold, design: .rounded))
+                            .foregroundStyle(theme.baseColor.opacity(0.75))
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
+                        if needsManualSortCount > 0 {
+                            Text("\(needsManualSortCount)")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange, in: Capsule())
+                        }
+                    }
                 }
 
                 Spacer(minLength: 0)

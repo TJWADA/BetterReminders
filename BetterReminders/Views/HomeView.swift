@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var showingDevPanel = false
     #endif
     @State private var showingNewList = false
+    @State private var showingAddReminder = false
     @State private var showingTaskSearch = false
     @State private var editingList: ReminderList?
 
@@ -42,7 +43,6 @@ struct HomeView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
             }
-            .navigationTitle("Lists")
             .navigationDestination(for: ReminderList.self) { list in
                 ListDetailView(list: list)
             }
@@ -62,6 +62,12 @@ struct HomeView: View {
                         showingTaskSearch = true
                     } label: {
                         Image(systemName: "magnifyingglass")
+                    }
+
+                    Button {
+                        showingAddReminder = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
                     }
 
                     Button {
@@ -93,6 +99,9 @@ struct HomeView: View {
         .sheet(isPresented: $showingTaskSearch) {
             GlobalTaskSearchView()
         }
+        .sheet(isPresented: $showingAddReminder) {
+            AddReminderSheet(allowListPicker: true)
+        }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
@@ -103,9 +112,11 @@ struct HomeView: View {
         #endif
         .sheet(isPresented: $showingNewList) {
             ListEditView()
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
         .sheet(item: $editingList) { list in
-            ListEditCompactView(list: list)
+            ListEditView(list: list)
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }

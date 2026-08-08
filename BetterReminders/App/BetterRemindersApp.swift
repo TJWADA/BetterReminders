@@ -32,6 +32,7 @@ struct BetterRemindersApp: App {
                         await ActionButtonRecordingHandler.continueFromAppOpenIfNeeded()
                         await requestNotificationPermission()
                         ListSeeder.seedIfNeeded(modelContext: modelContainer.mainContext)
+                        ListSeeder.ensureGeneralListExists(modelContext: modelContainer.mainContext)
                         await syncNotificationsAndCleanup()
                     }
                 }
