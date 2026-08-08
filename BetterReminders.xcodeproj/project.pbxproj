@@ -65,6 +65,7 @@
 		A1000000000000000000005B /* SharedUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005B /* SharedUserDefaults.swift */; };
 		A1000000000000000000005C /* RecordingValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005C /* RecordingValidation.swift */; };
 		A1000000000000000000005E /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005E /* AppConfiguration.swift */; };
+		A10000000000000000000069 /* AppGroupStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000069 /* AppGroupStorage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -154,6 +155,7 @@
 		A20000000000000000000061 /* ParsedReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsedReminder.swift; sourceTree = "<group>"; };
 		A20000000000000000000062 /* ListStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStyle.swift; sourceTree = "<group>"; };
 		A20000000000000000000063 /* Reminder+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Display.swift"; sourceTree = "<group>"; };
+		A20000000000000000000069 /* AppGroupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupStorage.swift; sourceTree = "<group>"; };
 		A30000000000000000000001 /* BetterReminders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BetterReminders.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000005 /* BetterRemindersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BetterRemindersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000007 /* BetterRemindersCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BetterRemindersCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -228,6 +230,7 @@
 				A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */,
 				A2000000000000000000005C /* RecordingValidation.swift */,
 				A2000000000000000000005E /* AppConfiguration.swift */,
+				A20000000000000000000069 /* AppGroupStorage.swift */,
 				A2000000000000000000005B /* SharedUserDefaults.swift */,
 				A20000000000000000000038 /* BetterRemindersCore.entitlements */,
 			);
@@ -523,6 +526,7 @@
 				A1000000000000000000005B /* SharedUserDefaults.swift in Sources */,
 				A1000000000000000000005C /* RecordingValidation.swift in Sources */,
 				A1000000000000000000005E /* AppConfiguration.swift in Sources */,
+				A10000000000000000000069 /* AppGroupStorage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

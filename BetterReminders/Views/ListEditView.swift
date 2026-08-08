@@ -216,7 +216,6 @@ struct ListEditCompactView: View {
 struct ListEditView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \ReminderList.sortOrder) private var allLists: [ReminderList]
 
     let existingList: ReminderList?
 
@@ -233,46 +232,64 @@ struct ListEditView: View {
         _colorHex = State(initialValue: list?.colorHex ?? ListStyle.presetColors[0])
     }
 
+    private var previewName: String {
+        name.isEmpty ? (existingList == nil ? "New List" : "List name") : name
+    }
+
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Name") {
-                    TextField("List name", text: $name)
-                        .focused($isNameFieldFocused)
-                }
-
-                Section("Icon") {
-                    ListIconPickerRow(icon: $icon, colorHex: colorHex)
-                        .padding(.vertical, 4)
-                }
-
-                Section("Color") {
-                    ListColorPickerRow(colorHex: $colorHex)
-                        .padding(.vertical, 4)
-                }
-
-                Section {
+            ScrollView {
+                VStack(spacing: 20) {
                     ListIconTile(
-                        name: name.isEmpty ? "New List" : name,
+                        name: previewName,
                         icon: icon,
                         colorHex: colorHex,
                         incompleteCount: existingList?.incompleteCount ?? 0
                     )
+                    .frame(maxWidth: 180)
                     .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                }
+                    .padding(.top, 8)
 
-                if existingList != nil {
-                    Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Name")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                        TextField("List name", text: $name)
+                            .focused($isNameFieldFocused)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .padding(.horizontal, 16)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Icon")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 16)
+                        ListIconPickerRow(icon: $icon, colorHex: colorHex, compact: true)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Color")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 16)
+                        ListColorPickerRow(colorHex: $colorHex, compact: true)
+                    }
+
+                    if existingList != nil {
                         Button("Delete List", role: .destructive) {
                             showingDeleteConfirm = true
                         }
+                        .padding(.top, 8)
                     }
                 }
+                .padding(.bottom, 24)
             }
             .scrollDismissesKeyboard(.interactively)
             .navigationTitle(existingList == nil ? "New List" : "Edit List")
@@ -306,6 +323,7 @@ struct ListEditView: View {
     }
 
     private func save() {
+        let allLists = (try? modelContext.fetch(FetchDescriptor<ReminderList>())) ?? []
         guard ListEditActions.save(
             name: name,
             icon: icon,

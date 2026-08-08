@@ -9,8 +9,15 @@ struct BetterRemindersApp: App {
     let modelContainer: ModelContainer
 
     init() {
+        AppGroupStorage.prepareApplicationSupportDirectory()
         do {
-            modelContainer = try ModelContainer(for: Reminder.self, ReminderList.self, ProcessingJob.self)
+            let configuration = ModelConfiguration(
+                groupContainer: .identifier(AppConfiguration.appGroupID)
+            )
+            modelContainer = try ModelContainer(
+                for: Reminder.self, ReminderList.self, ProcessingJob.self,
+                configurations: configuration
+            )
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
