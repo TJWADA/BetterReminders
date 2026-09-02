@@ -121,12 +121,9 @@ struct ListIconTile: View {
                             .minimumScaleFactor(0.6)
                             .lineLimit(1)
                         if needsManualSortCount > 0 {
-                            Text("\(needsManualSortCount)")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.orange, in: Capsule())
+                            Circle()
+                                .fill(Color.orange)
+                                .frame(width: 8, height: 8)
                         }
                     }
                 }

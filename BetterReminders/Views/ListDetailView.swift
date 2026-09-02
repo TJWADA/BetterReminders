@@ -23,7 +23,6 @@ struct ListDetailView: View {
     @State private var actionButtonError: String?
 
     @State private var newReminderTitle = ""
-    @State private var expandedReminderID: UUID?
     @FocusState private var isNewReminderFocused: Bool
 
     private var listReminders: [Reminder] {
@@ -46,16 +45,6 @@ struct ListDetailView: View {
             ForEach(listReminders) { reminder in
                 ReminderRowView(
                     reminder: reminder,
-                    isExpanded: expandedReminderID == reminder.id,
-                    onToggleExpand: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            if expandedReminderID == reminder.id {
-                                expandedReminderID = nil
-                            } else {
-                                expandedReminderID = reminder.id
-                            }
-                        }
-                    },
                     onCompletionChanged: {
                         scheduleGraceRefresh()
                     }
