@@ -142,6 +142,31 @@ final class ReminderFiltersTests: XCTestCase {
         XCTAssertEqual(recentItems.map(\.title), ["Recent"])
     }
 
+    func testSortForListViewPreservesGivenOrder() {
+        let first = TestFixtures.makeReminder(
+            title: "Task1",
+            dueDate: now.addingTimeInterval(7200),
+            list: list,
+            createdAt: now
+        )
+        let second = TestFixtures.makeReminder(
+            title: "Task2",
+            dueDate: now.addingTimeInterval(1800),
+            isCompleted: true,
+            completedAt: now.addingTimeInterval(3),
+            list: list,
+            createdAt: now.addingTimeInterval(1)
+        )
+        let third = TestFixtures.makeReminder(
+            title: "Task3",
+            list: list,
+            createdAt: now.addingTimeInterval(2)
+        )
+
+        let sorted = ReminderFilters.sortForListView([third, first, second])
+        XCTAssertEqual(sorted.map(\.title), ["Task3", "Task1", "Task2"])
+    }
+
     func testSortForListViewKeepsSubtasksUnderParent() {
         let parent = TestFixtures.makeReminder(
             title: "Pack",
@@ -149,21 +174,21 @@ final class ReminderFiltersTests: XCTestCase {
             list: list,
             createdAt: now
         )
-        let child = TestFixtures.makeReminder(
-            title: "Sunscreen",
-            dueDate: now.addingTimeInterval(3600),
-            list: list,
-            createdAt: now.addingTimeInterval(-1)
-        )
         let other = TestFixtures.makeReminder(
             title: "Call mom",
             dueDate: now.addingTimeInterval(1800),
             list: list,
-            createdAt: now
+            createdAt: now.addingTimeInterval(1)
+        )
+        let child = TestFixtures.makeReminder(
+            title: "Sunscreen",
+            dueDate: now.addingTimeInterval(3600),
+            list: list,
+            createdAt: now.addingTimeInterval(2)
         )
         XCTAssertTrue(child.indent(preceding: parent))
 
-        let sorted = ReminderFilters.sortForListView([parent, child, other])
+        let sorted = ReminderFilters.sortForListView([other, child, parent])
         XCTAssertEqual(sorted.map(\.title), ["Call mom", "Pack", "Sunscreen"])
     }
 

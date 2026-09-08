@@ -139,9 +139,10 @@ enum ReminderFilters {
         }
     }
 
+    /// Keeps the given order. Subtasks are grouped under their parent; nothing else is sorted.
     static func sortForListView(_ reminders: [Reminder]) -> [Reminder] {
         let ids = Set(reminders.map(\.id))
-        let topLevel = reminders.filter { $0.parent == nil }.sorted(by: compareForListView)
+        let topLevel = reminders.filter { $0.parent == nil }
 
         var result: [Reminder] = []
         result.reserveCapacity(reminders.count)
@@ -156,25 +157,9 @@ enum ReminderFilters {
             }
         }
 
-        let leftovers = reminders.filter { !placed.contains($0.id) }.sorted(by: compareForListView)
+        let leftovers = reminders.filter { !placed.contains($0.id) }
         result.append(contentsOf: leftovers)
         return result
-    }
-
-    private static func compareForListView(_ lhs: Reminder, _ rhs: Reminder) -> Bool {
-        if lhs.isCompleted != rhs.isCompleted {
-            return !lhs.isCompleted
-        }
-        switch (lhs.dueDate, rhs.dueDate) {
-        case let (l?, r?):
-            return l < r
-        case (nil, _?):
-            return false
-        case (_?, nil):
-            return true
-        case (nil, nil):
-            return lhs.createdAt > rhs.createdAt
-        }
     }
 
     static func sort(_ reminders: [Reminder], by mode: ReminderSortMode) -> [Reminder] {

@@ -5,7 +5,7 @@ import BetterRemindersCore
 struct ListDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var list: ReminderList
-    @Query(sort: \Reminder.createdAt, order: .reverse) private var allReminders: [Reminder]
+    @Query private var allReminders: [Reminder]
 
     @State private var settings = AppSettings.shared
     @Bindable private var recorder = AudioRecordingService.shared
