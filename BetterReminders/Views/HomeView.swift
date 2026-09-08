@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var showingDevPanel = false
     #endif
     @State private var showingNewList = false
+    @State private var showingAddReminder = false
     @State private var showingTaskSearch = false
     @State private var editingList: ReminderList?
 
@@ -24,84 +25,82 @@ struct HomeView: View {
     @State private var recordingError: String?
     @State private var actionButtonError: String?
 
-    @Namespace private var listTransitionNamespace
-    @Namespace private var recordingNamespace
-    @Namespace private var searchNamespace
-
     @State private var navigationPath = NavigationPath()
-
-    @State private var listGridID = UUID()
 
     private let gridSpacing: CGFloat = 12
 
-    private let fadeExtension: CGFloat = 48
-
-    private let cornerPadding: CGFloat = 20
+    private var isRecordingPresented: Binding<Bool> {
+        Binding(
+            get: { recorder.isRecording },
+            set: { _ in }
+        )
+    }
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            ZStack {
-                ScrollView {
-                    listGrid
-                        .id(listGridID)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                }
-                .scrollClipDisabled()
-                .safeAreaInset(edge: .top, spacing: 0) {
-                    Color.clear.frame(height: 60)
-                }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: 76)
-                }
-
-                GeometryReader { geometry in
-                    VStack(spacing: 0) {
-                        ScrollEdgeFade(isTop: true)
-                            .frame(height: geometry.safeAreaInsets.top + 60 + fadeExtension)
-                        Spacer(minLength: 0)
-                        ScrollEdgeFade(isTop: false)
-                            .frame(height: geometry.safeAreaInsets.bottom + 76 + fadeExtension)
-                    }
-                }
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-
-                VStack(spacing: 0) {
-                    cornerActionButtons
-                }
+            ScrollView {
+                listGrid
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
             }
-            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: ReminderList.self) { list in
                 ListDetailView(list: list)
-                    .navigationTransition(.zoom(sourceID: list.id, in: listTransitionNamespace))
-                    .onDisappear {
-                        listGridID = UUID()
+            }
+            .toolbar {
+                #if DEBUG
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showingDevPanel = true
+                    } label: {
+                        Image(systemName: "ladybug.fill")
+                            .foregroundStyle(.orange)
                     }
-            }
-            .overlay {
-                if recorder.isRecording {
-                    RecordingExpandedOverlay(
-                        recorder: recorder,
-                        displayTick: displayTick,
-                        namespace: recordingNamespace,
-                        onStop: { Task { await toggleRecording() } }
-                    )
-                    .transition(.identity)
-                    .zIndex(2)
                 }
+                #endif
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        showingTaskSearch = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
 
-                if showingTaskSearch {
-                    GlobalTaskSearchOverlay(
-                        isPresented: $showingTaskSearch,
-                        namespace: searchNamespace
-                    )
-                    .transition(.identity)
-                    .zIndex(1)
+                    Button {
+                        showingAddReminder = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+
+                    Button {
+                        Task { await toggleRecording() }
+                    } label: {
+                        Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                    }
+                    .disabled(processor.isProcessing)
+                    .tint(recorder.isRecording ? .red : .accentColor)
+
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
                 }
             }
-            .animation(.spring(response: 0.45, dampingFraction: 0.82), value: recorder.isRecording)
-            .animation(.spring(response: 0.45, dampingFraction: 0.82), value: showingTaskSearch)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                statusBanner
+            }
+        }
+        .fullScreenCover(isPresented: isRecordingPresented) {
+            RecordingSheetView(
+                recorder: recorder,
+                displayTick: displayTick,
+                onStop: { Task { await toggleRecording() } }
+            )
+        }
+        .sheet(isPresented: $showingTaskSearch) {
+            GlobalTaskSearchView()
+        }
+        .sheet(isPresented: $showingAddReminder) {
+            AddReminderSheet(allowListPicker: true)
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
@@ -113,14 +112,11 @@ struct HomeView: View {
         #endif
         .sheet(isPresented: $showingNewList) {
             ListEditView()
-        }
-        .onChange(of: showingNewList) { _, isShowing in
-            if !isShowing {
-                listGridID = UUID()
-            }
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
         }
         .sheet(item: $editingList) { list in
-            ListEditCompactView(list: list)
+            ListEditView(list: list)
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
@@ -158,6 +154,21 @@ struct HomeView: View {
         )
     }
 
+    @ViewBuilder
+    private var statusBanner: some View {
+        if !recorder.isRecording {
+            if processor.isProcessing {
+                ProcessingBannerView(
+                    status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
+                )
+            } else if let error = recordingError {
+                RecordingErrorBannerView(message: error) {
+                    recordingError = nil
+                }
+            }
+        }
+    }
+
     private var listGrid: some View {
         VStack(spacing: gridSpacing) {
             ForEach(0..<(lists.count / 2), id: \.self) { row in
@@ -169,29 +180,20 @@ struct HomeView: View {
                 }
             }
 
-            if !showingTaskSearch {
-                if lists.count.isMultiple(of: 2) == false, !lists.isEmpty {
-                    HStack(alignment: .top, spacing: gridSpacing) {
-                        listTile(for: lists[lists.count - 1])
-                            .frame(maxWidth: .infinity)
-                        EmptyListGridCell()
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-
-                HStack(alignment: .top, spacing: gridSpacing) {
-                    addListTileButton
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    EmptyListGridCell()
-                        .frame(maxWidth: .infinity)
-                }
-            } else if lists.count.isMultiple(of: 2) == false, !lists.isEmpty {
+            if lists.count.isMultiple(of: 2) == false, !lists.isEmpty {
                 HStack(alignment: .top, spacing: gridSpacing) {
                     listTile(for: lists[lists.count - 1])
                         .frame(maxWidth: .infinity)
                     EmptyListGridCell()
                         .frame(maxWidth: .infinity)
                 }
+            }
+
+            HStack(alignment: .top, spacing: gridSpacing) {
+                addListTileButton
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                EmptyListGridCell()
+                    .frame(maxWidth: .infinity)
             }
         }
     }
@@ -201,17 +203,15 @@ struct HomeView: View {
     }
 
     private func listTile(for list: ReminderList) -> some View {
-        Button {
-            navigationPath.append(list)
-        } label: {
-            ListIconTile(list: list)
-                .matchedTransitionSource(id: list.id, in: listTransitionNamespace)
-        }
-        .buttonStyle(.plain)
-        .onLongPressGesture(minimumDuration: 0.4) {
-            HapticHelper.selection()
-            editingList = list
-        }
+        ListIconTile(list: list)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                navigationPath.append(list)
+            }
+            .onLongPressGesture(minimumDuration: 0.4) {
+                HapticHelper.selection()
+                editingList = list
+            }
     }
 
     private var addListTileButton: some View {
@@ -221,61 +221,6 @@ struct HomeView: View {
             AddListTile()
         }
         .buttonStyle(.plain)
-    }
-
-    private var cornerActionButtons: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                #if DEBUG
-                CornerActionButton(icon: "ladybug.fill", color: .orange) {
-                    showingDevPanel = true
-                }
-                #endif
-                Spacer(minLength: 0)
-                CornerActionButton(icon: "gearshape.fill") {
-                    showingSettings = true
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            VStack(spacing: 0) {
-                if !recorder.isRecording {
-                    if processor.isProcessing {
-                        ProcessingBannerView(
-                            status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
-                        )
-                    } else if let error = recordingError {
-                        RecordingErrorBannerView(message: error) {
-                            recordingError = nil
-                        }
-                    }
-                }
-
-                HStack(spacing: 0) {
-                    CornerActionButton(
-                        icon: "magnifyingglass",
-                        namespace: searchNamespace,
-                        geometryID: "searchExpand",
-                        isExpanded: showingTaskSearch
-                    ) {
-                        withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                            showingTaskSearch = true
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    RecordButtonView(
-                        recorder: recorder,
-                        isProcessing: processor.isProcessing,
-                        namespace: recordingNamespace,
-                        isExpanded: recorder.isRecording
-                    ) {
-                        Task { await toggleRecording() }
-                    }
-                }
-            }
-        }
-        .padding(cornerPadding)
     }
 
     private func toggleRecording() async {

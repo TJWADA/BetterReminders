@@ -2,31 +2,18 @@ import SwiftUI
 import SwiftData
 import BetterRemindersCore
 
-struct ScrollEdgeFade: View {
-    let isTop: Bool
-
-    var body: some View {
-        LinearGradient(
-            stops: [
-                .init(color: Color(.systemBackground), location: 0),
-                .init(color: Color(.systemBackground), location: 0.65),
-                .init(color: Color(.systemBackground).opacity(0), location: 1),
-            ],
-            startPoint: isTop ? .top : .bottom,
-            endPoint: isTop ? .bottom : .top
-        )
-        .allowsHitTesting(false)
-    }
-}
-
 struct ReminderRowView: View {
     @Bindable var reminder: Reminder
+    var indentLevel: Int = 0
+    var onCompletionChanged: (() -> Void)? = nil
+    var onBecameVisible: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
             Button {
-                reminder.isCompleted.toggle()
+                reminder.toggleCompletion()
                 HapticHelper.selection()
+                onCompletionChanged?()
                 Task {
                     await reminder.updateNotificationForCompletion()
                 }
@@ -38,9 +25,18 @@ struct ReminderRowView: View {
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(reminder.title)
-                    .strikethrough(reminder.isCompleted)
-                    .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
+                HStack(spacing: 6) {
+                    if reminder.needsManualSort {
+                        Circle()
+                            .fill(Color.orange)
+                            .frame(width: 7, height: 7)
+                    }
+                    TextField("Reminder", text: $reminder.title, axis: .vertical)
+                        .lineLimit(1...3)
+                        .strikethrough(reminder.isCompleted)
+                        .foregroundStyle(reminder.isCompleted ? .secondary : .primary)
+                }
+
                 if let dueDate = reminder.dueDate {
                     Text(dueDate.formatted(date: .abbreviated, time: .shortened))
                         .font(.caption)
@@ -49,5 +45,9 @@ struct ReminderRowView: View {
             }
         }
         .padding(.vertical, 2)
+        .padding(.leading, CGFloat(indentLevel) * 28)
+        .onAppear {
+            onBecameVisible?()
+        }
     }
 }

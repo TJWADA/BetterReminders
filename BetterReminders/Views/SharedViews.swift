@@ -81,19 +81,22 @@ struct ListIconTile: View {
     let icon: String
     let colorHex: String
     var incompleteCount: Int = 0
+    var needsManualSortCount: Int = 0
 
     init(list: ReminderList) {
         self.name = list.name
         self.icon = list.icon
         self.colorHex = list.colorHex
         self.incompleteCount = list.incompleteCount
+        self.needsManualSortCount = list.needsManualSortCount
     }
 
-    init(name: String, icon: String, colorHex: String, incompleteCount: Int = 0) {
+    init(name: String, icon: String, colorHex: String, incompleteCount: Int = 0, needsManualSortCount: Int = 0) {
         self.name = name
         self.icon = icon
         self.colorHex = colorHex
         self.incompleteCount = incompleteCount
+        self.needsManualSortCount = needsManualSortCount
     }
 
     private var theme: ListColorTheme { ListColorTheme(colorHex: colorHex) }
@@ -111,11 +114,18 @@ struct ListIconTile: View {
                 HStack(alignment: .top) {
                     ListTileIcon(icon: icon, colorHex: colorHex)
                     Spacer(minLength: 4)
-                    Text("\(incompleteCount)")
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                        .foregroundStyle(theme.baseColor.opacity(0.75))
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("\(incompleteCount)")
+                            .font(.system(size: 22, weight: .semibold, design: .rounded))
+                            .foregroundStyle(theme.baseColor.opacity(0.75))
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
+                        if needsManualSortCount > 0 {
+                            Circle()
+                                .fill(Color.orange)
+                                .frame(width: 8, height: 8)
+                        }
+                    }
                 }
 
                 Spacer(minLength: 0)
@@ -170,5 +180,46 @@ struct ListNameBadge: View {
             .padding(.vertical, 4)
             .background(Color(hex: colorHex).opacity(0.15), in: Capsule())
             .foregroundStyle(Color(hex: colorHex))
+    }
+}
+
+struct ProcessingBannerView: View {
+    let status: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+            Text(status)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+    }
+}
+
+struct RecordingErrorBannerView: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.red)
+            Text(message)
+                .font(.caption)
+                .lineLimit(2)
+            Spacer()
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
     }
 }

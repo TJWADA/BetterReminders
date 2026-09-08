@@ -44,4 +44,8 @@ final class ReminderParserServiceTests: XCTestCase {
         XCTAssertEqual(reminder.title, "Buy milk")
         XCTAssertEqual(reminder.priority, "3")
     }
+
+    func testFormatListsBlockEmptyReturnsNone() {
+        XCTAssertEqual(ListClassificationContext.formatListsBlock([]), "None")
+    }
 }

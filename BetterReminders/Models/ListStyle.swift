@@ -8,9 +8,10 @@ enum ListStyle {
     ]
 
     static let presetIcons = [
-        "cart.fill", "briefcase.fill", "person.fill", "heart.fill",
+        "tray.fill", "cart.fill", "briefcase.fill", "person.fill", "heart.fill",
         "car.fill", "lightbulb.fill", "house.fill", "book.fill",
         "star.fill", "flag.fill", "gift.fill", "bell.fill",
         "fork.knife", "pawprint.fill", "airplane", "graduationcap.fill",
+        "list.bullet",
     ]
 }

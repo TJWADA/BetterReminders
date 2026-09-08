@@ -2,7 +2,7 @@ import Foundation
 
 public enum AppConfiguration {
     public static let appGroupID = "group.com.betterreminders.shared"
-    public static let fallbackListName = "Ideas"
+    public static let fallbackListName = "General"
 
     public enum OpenAI {
         public static let chatCompletionsURL = URL(string: "https://api.openai.com/v1/chat/completions")!

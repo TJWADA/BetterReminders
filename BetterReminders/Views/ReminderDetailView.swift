@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import BetterRemindersCore
 
 struct ReminderDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -8,117 +9,198 @@ struct ReminderDetailView: View {
     @Bindable var reminder: Reminder
     @State private var showingDeleteConfirm = false
     @State private var hasDueDate: Bool
+    @State private var placementEditSession = PlacementEditSession()
+
+    private let originalList: ReminderList?
+    private let wasUnconfirmed: Bool
+
+    private let priorityOptions: [(value: Int, label: String)] = [
+        (0, "None"),
+        (1, "Low"),
+        (2, "Medium"),
+        (3, "High"),
+    ]
 
     init(reminder: Reminder) {
         self.reminder = reminder
         _hasDueDate = State(initialValue: reminder.dueDate != nil)
+        originalList = reminder.list
+        wasUnconfirmed = reminder.needsManualSort
     }
 
     var body: some View {
-        Form {
-            Section("Reminder") {
-                TextField("Title", text: $reminder.title, axis: .vertical)
-                    .lineLimit(2...4)
-                Toggle("Completed", isOn: $reminder.isCompleted)
-                    .onChange(of: reminder.isCompleted) { _, _ in
-                        Task {
-                            await reminder.updateNotificationForCompletion()
-                        }
-                    }
-                Toggle("Due Date", isOn: $hasDueDate)
-                    .onChange(of: hasDueDate) { _, enabled in
-                        if enabled {
-                            if reminder.dueDate == nil {
-                                reminder.dueDate = Date()
-                            }
-                        } else {
-                            reminder.dueDate = nil
-                            Task { await NotificationSchedulingService.cancel(for: reminder.id) }
-                        }
-                    }
-                if hasDueDate {
-                    DatePicker(
-                        "When",
-                        selection: Binding(
-                            get: { reminder.dueDate ?? Date() },
-                            set: { reminder.dueDate = $0 }
-                        ),
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                }
-                Picker("Priority", selection: $reminder.priority) {
-                    Text("None").tag(0)
-                    Text("Low").tag(1)
-                    Text("Medium").tag(2)
-                    Text("High").tag(3)
-                }
-            }
-
-            Section("List") {
-                Picker("List", selection: Binding(
-                    get: { reminder.list?.id ?? allLists.first?.id ?? UUID() },
-                    set: { newID in
-                        let oldListName = reminder.list?.name ?? "Unknown"
-                        if let newList = allLists.first(where: { $0.id == newID }) {
-                            reminder.list = newList
-                            if oldListName != newList.name {
-                                AppSettings.shared.recordCorrection(
-                                    from: oldListName,
-                                    to: newList.name,
-                                    reminderTitle: reminder.title
-                                )
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Title", text: $reminder.title, axis: .vertical)
+                        .lineLimit(2...4)
+                    Toggle("Due Date", isOn: $hasDueDate)
+                        .onChange(of: hasDueDate) { _, enabled in
+                            if enabled {
+                                if reminder.dueDate == nil {
+                                    reminder.dueDate = Date()
+                                }
+                            } else {
+                                reminder.dueDate = nil
+                                Task { await NotificationSchedulingService.cancel(for: reminder.id) }
                             }
                         }
+                    if hasDueDate {
+                        DatePicker(
+                            "When",
+                            selection: Binding(
+                                get: { reminder.dueDate ?? Date() },
+                                set: { reminder.dueDate = $0 }
+                            ),
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
                     }
-                )) {
-                    ForEach(allLists) { list in
-                        Text(list.name).tag(list.id)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Priority")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            ForEach(priorityOptions, id: \.value) { option in
+                                let isSelected = reminder.priority == option.value
+                                let color = Reminder.color(forPriority: option.value)
+                                Button {
+                                    reminder.priority = option.value
+                                } label: {
+                                    Text(option.label)
+                                        .font(.subheadline.weight(.medium))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(
+                                            isSelected ? color.opacity(0.2) : Color.secondary.opacity(0.08),
+                                            in: Capsule()
+                                        )
+                                        .foregroundStyle(isSelected ? color : .secondary)
+                                        .overlay(
+                                            Capsule()
+                                                .strokeBorder(isSelected ? color : .clear, lineWidth: 1.5)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+
+                    if reminder.isSubtask {
+                        if let parentTitle = reminder.parent?.title, !parentTitle.isEmpty {
+                            Text("Subtask of \(parentTitle)")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Picker("List", selection: Binding(
+                            get: { reminder.list?.id ?? allLists.first?.id ?? UUID() },
+                            set: { newID in
+                                if let newList = allLists.first(where: { $0.id == newID }),
+                                   reminder.list?.id != newList.id {
+                                    reminder.list = newList
+                                    reminder.syncSubtasksList()
+                                }
+                            }
+                        )) {
+                            ForEach(allLists) { list in
+                                Label {
+                                    Text(list.name)
+                                } icon: {
+                                    Image(systemName: list.icon)
+                                        .foregroundStyle(Color(hex: list.colorHex))
+                                }
+                                .tag(list.id)
+                            }
+                        }
+                    }
+                }
+
+                if let audioPath = reminder.audioFilePath, !audioPath.isEmpty {
+                    Section("Original Recording") {
+                        AudioPlaybackView(audioPath: audioPath)
+                    }
+                }
+
+                if !reminder.rawTranscript.isEmpty {
+                    Section("Original Transcript") {
+                        Text(reminder.rawTranscript)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section {
+                    Button("Delete Reminder", role: .destructive) {
+                        showingDeleteConfirm = true
                     }
                 }
             }
-
-            if let audioPath = reminder.audioFilePath, !audioPath.isEmpty {
-                Section("Original Recording") {
-                    AudioPlaybackView(audioPath: audioPath)
+            .navigationTitle("Edit Reminder")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        commitPlacementReviewIfNeeded()
+                        try? modelContext.save()
+                        Task { await NotificationSchedulingService.schedule(for: reminder) }
+                        dismiss()
+                    }
                 }
             }
-
-            if !reminder.rawTranscript.isEmpty {
-                Section("Original Transcript") {
-                    Text(reminder.rawTranscript)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Section {
-                Button("Delete Reminder", role: .destructive) {
-                    showingDeleteConfirm = true
+            .confirmationDialog(
+                reminder.subtasks.isEmpty
+                    ? "Delete this reminder?"
+                    : "Delete this reminder and its subtasks?",
+                isPresented: $showingDeleteConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    placementEditSession.isDeleting = true
+                    let idsToCancel = [reminder.id] + reminder.subtasks.map(\.id)
+                    Task {
+                        for id in idsToCancel {
+                            await NotificationSchedulingService.cancel(for: id)
+                        }
+                    }
+                    modelContext.delete(reminder)
+                    try? modelContext.save()
+                    dismiss()
                 }
             }
         }
-        .navigationTitle("Edit Reminder")
-        .navigationBarTitleDisplayMode(.inline)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
         .onDisappear {
-            try? modelContext.save()
-            Task { await NotificationSchedulingService.schedule(for: reminder) }
-        }
-        .confirmationDialog("Delete this reminder?", isPresented: $showingDeleteConfirm, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                Task { await NotificationSchedulingService.cancel(for: reminder.id) }
-                modelContext.delete(reminder)
-                try? modelContext.save()
-                dismiss()
-            }
+            commitPlacementReviewIfNeeded()
         }
     }
+
+    private func commitPlacementReviewIfNeeded() {
+        guard !placementEditSession.didCommit else { return }
+        placementEditSession.didCommit = true
+        guard !placementEditSession.isDeleting else { return }
+
+        let didMove = PlacementReview.commitFirstLookMove(
+            wasUnconfirmed: wasUnconfirmed,
+            originalList: originalList,
+            currentList: reminder.list,
+            reminderTitle: reminder.title
+        )
+        if didMove {
+            reminder.needsManualSort = false
+        }
+    }
+}
+
+private final class PlacementEditSession {
+    var didCommit = false
+    var isDeleting = false
 }
 
 #Preview {
     let list = ReminderList(name: "Groceries", icon: "cart.fill", colorHex: "34C759", sortOrder: 0)
     let reminder = Reminder(title: "Buy eggs", rawTranscript: "Remind me to buy eggs", list: list)
-    NavigationStack {
-        ReminderDetailView(reminder: reminder)
-    }
-    .modelContainer(for: [Reminder.self, ReminderList.self], inMemory: true)
+    ReminderDetailView(reminder: reminder)
+        .modelContainer(for: [Reminder.self, ReminderList.self], inMemory: true)
 }

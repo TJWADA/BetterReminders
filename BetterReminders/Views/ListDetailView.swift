@@ -13,104 +13,126 @@ struct ListDetailView: View {
 
     @State private var showingSettings = false
     @State private var showingTaskSearch = false
-    @State private var showingAddReminder = false
+    @State private var editingReminder: Reminder?
 
     @State private var displayTick = 0
     @State private var displayTimer: Timer?
+    @State private var listRefreshTick = 0
     @State private var permissionDenied = false
     @State private var recordingError: String?
     @State private var actionButtonError: String?
 
-    @Namespace private var recordingNamespace
-    @Namespace private var searchNamespace
-
-    private let fadeExtension: CGFloat = 48
+    @State private var newReminderTitle = ""
+    @FocusState private var isNewReminderFocused: Bool
+    @State private var seenPlacementIDs: Set<UUID> = []
 
     private var listReminders: [Reminder] {
+        _ = listRefreshTick
         let inList = allReminders.filter { $0.list?.id == list.id }
         return ReminderFilters.sortForListView(
-            ReminderFilters.apply(
-                to: inList,
-                searchText: "",
-                hideCompleted: settings.hideCompleted,
-                priorityFilter: .all
-            )
+            ReminderFilters.visibleInList(inList)
+        )
+    }
+
+    private var isRecordingPresented: Binding<Bool> {
+        Binding(
+            get: { recorder.isRecording },
+            set: { _ in }
         )
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            listHeader
-
-            Group {
-                if listReminders.isEmpty {
-                    ContentUnavailableView(
-                        "No Reminders",
-                        systemImage: "checklist",
-                        description: Text("Tap the keyboard or mic to add a reminder.")
-                    )
-                } else {
-                    List {
-                        ForEach(listReminders) { reminder in
-                            NavigationLink {
-                                ReminderDetailView(reminder: reminder)
-                            } label: {
-                                ReminderRowView(reminder: reminder)
-                            }
+        List {
+            ForEach(Array(listReminders.enumerated()), id: \.element.id) { index, reminder in
+                ReminderRowView(
+                    reminder: reminder,
+                    indentLevel: reminder.isSubtask ? 1 : 0,
+                    onCompletionChanged: {
+                        scheduleGraceRefresh()
+                    },
+                    onBecameVisible: {
+                        if reminder.needsManualSort {
+                            seenPlacementIDs.insert(reminder.id)
                         }
                     }
-                    .listStyle(.plain)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .scrollClipDisabled()
-        }
-        .toolbar(.hidden, for: .navigationBar)
-        .overlay(alignment: .bottom) {
-            GeometryReader { geometry in
-                VStack {
-                    Spacer(minLength: 0)
-                    ScrollEdgeFade(isTop: false)
-                        .frame(height: geometry.safeAreaInsets.bottom + 76 + fadeExtension)
-                }
-            }
-            .ignoresSafeArea(edges: .bottom)
-            .allowsHitTesting(false)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: 76)
-        }
-        .overlay(alignment: .bottom) {
-            bottomActionBar
-        }
-        .overlay {
-            if recorder.isRecording {
-                RecordingExpandedOverlay(
-                    recorder: recorder,
-                    displayTick: displayTick,
-                    namespace: recordingNamespace,
-                    onStop: { Task { await toggleRecording() } }
                 )
-                .transition(.identity)
-                .zIndex(2)
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    if reminder.isSubtask {
+                        Button("Outdent") {
+                            reminder.outdent()
+                            HapticHelper.selection()
+                            persistSubtaskChange()
+                        }
+                        .tint(.orange)
+                    } else {
+                        let preceding = index > 0 ? listReminders[index - 1] : nil
+                        if reminder.canIndent(preceding: preceding) {
+                            Button("Indent") {
+                                reminder.indent(preceding: preceding)
+                                HapticHelper.selection()
+                                persistSubtaskChange()
+                            }
+                            .tint(.indigo)
+                        }
+                    }
+                }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("Edit") {
+                        editingReminder = reminder
+                    }
+                    .tint(.accentColor)
+                }
+                .onChange(of: reminder.dueDate) { _, _ in
+                    Task { await NotificationSchedulingService.schedule(for: reminder) }
+                }
             }
 
-            if showingTaskSearch {
-                GlobalTaskSearchOverlay(
-                    isPresented: $showingTaskSearch,
-                    namespace: searchNamespace
-                )
-                .transition(.identity)
-                .zIndex(1)
+            newReminderRow
+        }
+        .listStyle(.plain)
+        .navigationTitle(list.name)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    showingTaskSearch = true
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+
+                Button {
+                    Task { await toggleRecording() }
+                } label: {
+                    Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                }
+                .disabled(processor.isProcessing)
+                .tint(recorder.isRecording ? .red : .accentColor)
+
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape.fill")
+                }
             }
         }
-        .animation(.spring(response: 0.45, dampingFraction: 0.82), value: recorder.isRecording)
-        .animation(.spring(response: 0.45, dampingFraction: 0.82), value: showingTaskSearch)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            statusBanner
+        }
+        .fullScreenCover(isPresented: isRecordingPresented) {
+            RecordingSheetView(
+                recorder: recorder,
+                displayTick: displayTick,
+                onStop: { Task { await toggleRecording() } }
+            )
+        }
+        .sheet(isPresented: $showingTaskSearch) {
+            GlobalTaskSearchView()
+        }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
         }
-        .sheet(isPresented: $showingAddReminder) {
-            AddReminderSheet(list: list)
+        .sheet(item: $editingReminder) { reminder in
+            ReminderDetailView(reminder: reminder)
         }
         .alert("Microphone Access Required", isPresented: $permissionDenied) {
             Button("OK", role: .cancel) {}
@@ -124,6 +146,14 @@ struct ListDetailView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(actionButtonError ?? "Could not start recording.")
+        }
+        .onAppear {
+            if recorder.isRecording {
+                startDisplayTimer()
+            }
+        }
+        .onDisappear {
+            confirmSeenPlacements()
         }
         .actionButtonRecordingHandlers(
             recorder: recorder,
@@ -142,65 +172,64 @@ struct ListDetailView: View {
         )
     }
 
-    private var listHeader: some View {
-        let theme = ListColorTheme(colorHex: list.colorHex)
+    private var newReminderRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "circle")
+                .foregroundStyle(.secondary)
+                .font(.title3)
 
-        return HStack(spacing: 8) {
-            ListTileIcon(icon: list.icon, colorHex: list.colorHex)
-            Text(list.name)
-                .font(.headline)
-            Spacer()
-            Button {
-                showingSettings = true
-            } label: {
-                Image(systemName: "gearshape.fill")
-            }
+            TextField("New Reminder", text: $newReminderTitle)
+                .focused($isNewReminderFocused)
+                .onSubmit {
+                    commitNewReminder()
+                }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(theme.headerGradient)
+        .padding(.vertical, 2)
     }
 
-    private var bottomActionBar: some View {
-        VStack(spacing: 0) {
-            if !recorder.isRecording {
-                if processor.isProcessing {
-                    ProcessingBannerView(
-                        status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
-                    )
-                } else if let error = recordingError {
-                    RecordingErrorBannerView(message: error) {
-                        recordingError = nil
-                    }
+    @ViewBuilder
+    private var statusBanner: some View {
+        if !recorder.isRecording {
+            if processor.isProcessing {
+                ProcessingBannerView(
+                    status: processor.currentStatus?.rawValue.capitalized ?? "Processing"
+                )
+            } else if let error = recordingError {
+                RecordingErrorBannerView(message: error) {
+                    recordingError = nil
                 }
             }
+        }
+    }
 
-            HStack(spacing: 0) {
-                CornerActionButton(
-                    icon: "magnifyingglass",
-                    namespace: searchNamespace,
-                    geometryID: "searchExpand",
-                    isExpanded: showingTaskSearch
-                ) {
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                        showingTaskSearch = true
-                    }
-                }
-                Spacer(minLength: 0)
-                CornerActionButton(icon: "square.and.pencil") {
-                    showingAddReminder = true
-                }
-                RecordButtonView(
-                    recorder: recorder,
-                    isProcessing: processor.isProcessing,
-                    namespace: recordingNamespace,
-                    isExpanded: recorder.isRecording
-                ) {
-                    Task { await toggleRecording() }
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+    private func persistSubtaskChange() {
+        listRefreshTick += 1
+        try? modelContext.save()
+    }
+
+    private func confirmSeenPlacements() {
+        PlacementReview.confirmVisiblePlacements(ids: seenPlacementIDs, in: allReminders)
+        try? modelContext.save()
+    }
+
+    private func commitNewReminder() {
+        let trimmed = newReminderTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let reminder = Reminder(title: trimmed, list: list)
+        modelContext.insert(reminder)
+        try? modelContext.save()
+        newReminderTitle = ""
+        HapticHelper.selection()
+        isNewReminderFocused = true
+    }
+
+    private func scheduleGraceRefresh() {
+        listRefreshTick += 1
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(ReminderFilters.completionGracePeriod))
+            listRefreshTick += 1
+            try? modelContext.save()
         }
     }
 

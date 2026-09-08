@@ -12,6 +12,8 @@ enum TestFixtures {
         dueDate: Date? = nil,
         priority: Int = 0,
         isCompleted: Bool = false,
+        completedAt: Date? = nil,
+        needsManualSort: Bool = false,
         list: ReminderList? = nil,
         createdAt: Date = Date()
     ) -> Reminder {
@@ -21,6 +23,8 @@ enum TestFixtures {
             dueDate: dueDate,
             priority: priority,
             isCompleted: isCompleted,
+            completedAt: completedAt,
+            needsManualSort: needsManualSort,
             createdAt: createdAt,
             list: list
         )

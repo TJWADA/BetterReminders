@@ -50,15 +50,18 @@
 		A10000000000000000000051 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
 		A10000000000000000000052 /* BetterRemindersCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000053 /* Reminder+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* Reminder+Notifications.swift */; };
+		A1000000000000000000006E /* Reminder+Subtasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006E /* Reminder+Subtasks.swift */; };
+		A1000000000000000000006F /* ReminderSubtaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006F /* ReminderSubtaskTests.swift */; };
 		A10000000000000000000054 /* ListEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000054 /* ListEditView.swift */; };
 		A10000000000000000000055 /* AddReminderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000055 /* AddReminderSheet.swift */; };
 		A10000000000000000000056 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000056 /* ListDetailView.swift */; };
-		A10000000000000000000057 /* RecordingAnimationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000057 /* RecordingAnimationViews.swift */; };
-		A10000000000000000000059 /* RecordingExpandedOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000064 /* RecordingExpandedOverlay.swift */; };
-		A10000000000000000000064 /* GlobalTaskSearchOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000065 /* GlobalTaskSearchOverlay.swift */; };
+		A1000000000000000000006A /* RecordingSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006A /* RecordingSheetView.swift */; };
+		A1000000000000000000006B /* GlobalTaskSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006B /* GlobalTaskSearchView.swift */; };
 		A1000000000000000000005F /* DurationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005F /* DurationFormatter.swift */; };
 		A10000000000000000000060 /* Color+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000060 /* Color+Hex.swift */; };
 		A10000000000000000000061 /* ParsedReminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000061 /* ParsedReminder.swift */; };
+		A1000000000000000000006C /* ListClassificationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006C /* ListClassificationContext.swift */; };
+		A1000000000000000000006D /* ListClassificationContextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006D /* ListClassificationContextTests.swift */; };
 		A10000000000000000000062 /* ListStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000062 /* ListStyle.swift */; };
 		A10000000000000000000063 /* Reminder+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000063 /* Reminder+Display.swift */; };
 		A10000000000000000000066 /* ReminderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000066 /* ReminderRowView.swift */; };
@@ -136,14 +139,15 @@
 		A20000000000000000000034 /* ReminderParserServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParserServiceTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingServiceTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* Reminder+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Notifications.swift"; sourceTree = "<group>"; };
+		A2000000000000000000006E /* Reminder+Subtasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Subtasks.swift"; sourceTree = "<group>"; };
+		A2000000000000000000006F /* ReminderSubtaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSubtaskTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000038 /* BetterRemindersCore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BetterRemindersCore.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonFlowCoordinator.swift; sourceTree = "<group>"; };
 		A20000000000000000000054 /* ListEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListEditView.swift; sourceTree = "<group>"; };
 		A20000000000000000000055 /* AddReminderSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddReminderSheet.swift; sourceTree = "<group>"; };
 		A20000000000000000000056 /* ListDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListDetailView.swift; sourceTree = "<group>"; };
-		A20000000000000000000057 /* RecordingAnimationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingAnimationViews.swift; sourceTree = "<group>"; };
-		A20000000000000000000064 /* RecordingExpandedOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingExpandedOverlay.swift; sourceTree = "<group>"; };
-		A20000000000000000000065 /* GlobalTaskSearchOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalTaskSearchOverlay.swift; sourceTree = "<group>"; };
+		A2000000000000000000006A /* RecordingSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingSheetView.swift; sourceTree = "<group>"; };
+		A2000000000000000000006B /* GlobalTaskSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalTaskSearchView.swift; sourceTree = "<group>"; };
 		A20000000000000000000066 /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
 		A2000000000000000000005B /* SharedUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedUserDefaults.swift; sourceTree = "<group>"; };
 		A2000000000000000000005C /* RecordingValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingValidation.swift; sourceTree = "<group>"; };
@@ -153,6 +157,8 @@
 		A2000000000000000000005F /* DurationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationFormatter.swift; sourceTree = "<group>"; };
 		A20000000000000000000060 /* Color+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Hex.swift"; sourceTree = "<group>"; };
 		A20000000000000000000061 /* ParsedReminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParsedReminder.swift; sourceTree = "<group>"; };
+		A2000000000000000000006C /* ListClassificationContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListClassificationContext.swift; sourceTree = "<group>"; };
+		A2000000000000000000006D /* ListClassificationContextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListClassificationContextTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000062 /* ListStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListStyle.swift; sourceTree = "<group>"; };
 		A20000000000000000000063 /* Reminder+Display.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Display.swift"; sourceTree = "<group>"; };
 		A20000000000000000000069 /* AppGroupStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroupStorage.swift; sourceTree = "<group>"; };
@@ -263,7 +269,9 @@
 				A20000000000000000000004 /* Reminder.swift */,
 				A20000000000000000000063 /* Reminder+Display.swift */,
 				A20000000000000000000037 /* Reminder+Notifications.swift */,
+				A2000000000000000000006E /* Reminder+Subtasks.swift */,
 				A20000000000000000000061 /* ParsedReminder.swift */,
+				A2000000000000000000006C /* ListClassificationContext.swift */,
 				A20000000000000000000062 /* ListStyle.swift */,
 				A20000000000000000000005 /* ProcessingJob.swift */,
 			);
@@ -303,9 +311,8 @@
 				A8000000000000000000000E /* Components */,
 				A2000000000000000000004B /* HomeView.swift */,
 				A20000000000000000000056 /* ListDetailView.swift */,
-				A20000000000000000000057 /* RecordingAnimationViews.swift */,
-				A20000000000000000000064 /* RecordingExpandedOverlay.swift */,
-				A20000000000000000000065 /* GlobalTaskSearchOverlay.swift */,
+				A2000000000000000000006A /* RecordingSheetView.swift */,
+				A2000000000000000000006B /* GlobalTaskSearchView.swift */,
 				A20000000000000000000054 /* ListEditView.swift */,
 				A20000000000000000000055 /* AddReminderSheet.swift */,
 				A20000000000000000000015 /* ReminderDetailView.swift */,
@@ -341,8 +348,10 @@
 			children = (
 				A2000000000000000000002A /* TestFixtures.swift */,
 				A2000000000000000000002B /* ReminderFiltersTests.swift */,
+				A2000000000000000000006F /* ReminderSubtaskTests.swift */,
 				A20000000000000000000033 /* ProcessingJobCleanupServiceTests.swift */,
 				A20000000000000000000034 /* ReminderParserServiceTests.swift */,
+				A2000000000000000000006D /* ListClassificationContextTests.swift */,
 				A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */,
 			);
 			path = BetterRemindersTests;
@@ -467,7 +476,9 @@
 				A10000000000000000000004 /* Reminder.swift in Sources */,
 				A10000000000000000000063 /* Reminder+Display.swift in Sources */,
 				A10000000000000000000053 /* Reminder+Notifications.swift in Sources */,
+				A1000000000000000000006E /* Reminder+Subtasks.swift in Sources */,
 				A10000000000000000000061 /* ParsedReminder.swift in Sources */,
+				A1000000000000000000006C /* ListClassificationContext.swift in Sources */,
 				A10000000000000000000062 /* ListStyle.swift in Sources */,
 				A10000000000000000000005 /* ProcessingJob.swift in Sources */,
 				A10000000000000000000006 /* KeychainHelper.swift in Sources */,
@@ -489,9 +500,8 @@
 				A1000000000000000000000F /* BetterRemindersShortcuts.swift in Sources */,
 				A10000000000000000000012 /* HomeView.swift in Sources */,
 				A10000000000000000000056 /* ListDetailView.swift in Sources */,
-				A10000000000000000000057 /* RecordingAnimationViews.swift in Sources */,
-				A10000000000000000000059 /* RecordingExpandedOverlay.swift in Sources */,
-				A10000000000000000000064 /* GlobalTaskSearchOverlay.swift in Sources */,
+				A1000000000000000000006A /* RecordingSheetView.swift in Sources */,
+				A1000000000000000000006B /* GlobalTaskSearchView.swift in Sources */,
 				A10000000000000000000066 /* ReminderRowView.swift in Sources */,
 				A10000000000000000000054 /* ListEditView.swift in Sources */,
 				A10000000000000000000055 /* AddReminderSheet.swift in Sources */,
@@ -509,8 +519,10 @@
 			files = (
 				A1000000000000000000002A /* TestFixtures.swift in Sources */,
 				A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */,
+				A1000000000000000000006F /* ReminderSubtaskTests.swift in Sources */,
 				A10000000000000000000033 /* ProcessingJobCleanupServiceTests.swift in Sources */,
 				A10000000000000000000034 /* ReminderParserServiceTests.swift in Sources */,
+				A1000000000000000000006D /* ListClassificationContextTests.swift in Sources */,
 				A10000000000000000000035 /* NotificationSchedulingServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

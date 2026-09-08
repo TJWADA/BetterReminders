@@ -43,6 +43,9 @@ enum PriorityFilter: Int, CaseIterable, Identifiable {
 }
 
 enum ReminderFilters {
+    static let completionGracePeriod: TimeInterval = 3
+    static let recentlyCompletedDays = 7
+
     static func apply(
         to reminders: [Reminder],
         searchText: String,
@@ -71,6 +74,55 @@ enum ReminderFilters {
         return result
     }
 
+    /// Incomplete reminders, plus completed ones still inside the grace buffer.
+    /// Parents of still-visible subtasks stay visible so children are not orphaned.
+    static func visibleInList(
+        _ reminders: [Reminder],
+        now: Date = Date(),
+        gracePeriod: TimeInterval = completionGracePeriod
+    ) -> [Reminder] {
+        let individuallyVisible = reminders.filter { isIndividuallyVisible($0, now: now, gracePeriod: gracePeriod) }
+        var result = individuallyVisible
+        var visibleIDs = Set(individuallyVisible.map(\.id))
+        let idsInInput = Set(reminders.map(\.id))
+
+        for reminder in individuallyVisible {
+            guard let parent = reminder.parent,
+                  idsInInput.contains(parent.id),
+                  !visibleIDs.contains(parent.id) else { continue }
+            result.append(parent)
+            visibleIDs.insert(parent.id)
+        }
+
+        return result
+    }
+
+    static func isIndividuallyVisible(
+        _ reminder: Reminder,
+        now: Date = Date(),
+        gracePeriod: TimeInterval = completionGracePeriod
+    ) -> Bool {
+        if !reminder.isCompleted { return true }
+        guard let completedAt = reminder.completedAt else { return false }
+        return now.timeIntervalSince(completedAt) < gracePeriod
+    }
+
+    static func recentlyCompleted(
+        _ reminders: [Reminder],
+        now: Date = Date(),
+        withinDays: Int = recentlyCompletedDays
+    ) -> [Reminder] {
+        let cutoff = Calendar.current.date(byAdding: .day, value: -withinDays, to: now) ?? now
+        return reminders
+            .filter { reminder in
+                guard reminder.isCompleted, let completedAt = reminder.completedAt else { return false }
+                return completedAt >= cutoff
+            }
+            .sorted { lhs, rhs in
+                (lhs.completedAt ?? .distantPast) > (rhs.completedAt ?? .distantPast)
+            }
+    }
+
     static func sortByDueDate(_ reminders: [Reminder]) -> [Reminder] {
         reminders.sorted { lhs, rhs in
             switch (lhs.dueDate, rhs.dueDate) {
@@ -88,20 +140,40 @@ enum ReminderFilters {
     }
 
     static func sortForListView(_ reminders: [Reminder]) -> [Reminder] {
-        reminders.sorted { lhs, rhs in
-            if lhs.isCompleted != rhs.isCompleted {
-                return !lhs.isCompleted
+        let ids = Set(reminders.map(\.id))
+        let topLevel = reminders.filter { $0.parent == nil }.sorted(by: compareForListView)
+
+        var result: [Reminder] = []
+        result.reserveCapacity(reminders.count)
+        var placed = Set<UUID>()
+
+        for parent in topLevel {
+            result.append(parent)
+            placed.insert(parent.id)
+            for child in parent.orderedSubtasks where ids.contains(child.id) {
+                result.append(child)
+                placed.insert(child.id)
             }
-            switch (lhs.dueDate, rhs.dueDate) {
-            case let (l?, r?):
-                return l < r
-            case (nil, _?):
-                return false
-            case (_?, nil):
-                return true
-            case (nil, nil):
-                return lhs.createdAt > rhs.createdAt
-            }
+        }
+
+        let leftovers = reminders.filter { !placed.contains($0.id) }.sorted(by: compareForListView)
+        result.append(contentsOf: leftovers)
+        return result
+    }
+
+    private static func compareForListView(_ lhs: Reminder, _ rhs: Reminder) -> Bool {
+        if lhs.isCompleted != rhs.isCompleted {
+            return !lhs.isCompleted
+        }
+        switch (lhs.dueDate, rhs.dueDate) {
+        case let (l?, r?):
+            return l < r
+        case (nil, _?):
+            return false
+        case (_?, nil):
+            return true
+        case (nil, nil):
+            return lhs.createdAt > rhs.createdAt
         }
     }
 

@@ -145,10 +145,10 @@ final class ReminderProcessingService {
             throw ProcessingError.noListsAvailable
         }
 
+        let listContexts = lists.map(ListClassificationContext.from(list:))
         let parsed = try await ReminderParserService.parse(
             transcript: transcript,
-            listNames: lists.map(\.name),
-            recentCorrections: AppSettings.shared.recentCorrections
+            listContexts: listContexts
         )
 
         _ = await insertParsedReminders(
@@ -181,7 +181,8 @@ final class ReminderProcessingService {
         var firstListIcon: String?
 
         for item in items {
-            let targetList = ListSeeder.findList(named: item.list, in: lists)
+            let matchedList = ListSeeder.findList(named: item.list, in: lists)
+            let targetList = matchedList
                 ?? defaultList
                 ?? ListSeeder.fallbackList(from: lists)
 
@@ -192,6 +193,7 @@ final class ReminderProcessingService {
                 rawTranscript: transcript,
                 dueDate: ReminderParserService.parseDueDate(item.dueDate),
                 priority: ReminderParserService.priorityValue(from: item.priority),
+                needsManualSort: true,
                 audioFilePath: retainAudioPath,
                 list: targetList
             )
