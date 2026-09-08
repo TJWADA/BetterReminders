@@ -43,9 +43,10 @@ struct ListDetailView: View {
 
     var body: some View {
         List {
-            ForEach(listReminders) { reminder in
+            ForEach(Array(listReminders.enumerated()), id: \.element.id) { index, reminder in
                 ReminderRowView(
                     reminder: reminder,
+                    indentLevel: reminder.isSubtask ? 1 : 0,
                     onCompletionChanged: {
                         scheduleGraceRefresh()
                     },
@@ -55,6 +56,26 @@ struct ListDetailView: View {
                         }
                     }
                 )
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    if reminder.isSubtask {
+                        Button("Outdent") {
+                            reminder.outdent()
+                            HapticHelper.selection()
+                            persistSubtaskChange()
+                        }
+                        .tint(.orange)
+                    } else {
+                        let preceding = index > 0 ? listReminders[index - 1] : nil
+                        if reminder.canIndent(preceding: preceding) {
+                            Button("Indent") {
+                                reminder.indent(preceding: preceding)
+                                HapticHelper.selection()
+                                persistSubtaskChange()
+                            }
+                            .tint(.indigo)
+                        }
+                    }
+                }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button("Edit") {
                         editingReminder = reminder
@@ -179,6 +200,11 @@ struct ListDetailView: View {
                 }
             }
         }
+    }
+
+    private func persistSubtaskChange() {
+        listRefreshTick += 1
+        try? modelContext.save()
     }
 
     private func confirmSeenPlacements() {

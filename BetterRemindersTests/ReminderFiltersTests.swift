@@ -141,4 +141,43 @@ final class ReminderFiltersTests: XCTestCase {
         let recentItems = ReminderFilters.recentlyCompleted([recent, old], now: now)
         XCTAssertEqual(recentItems.map(\.title), ["Recent"])
     }
+
+    func testSortForListViewKeepsSubtasksUnderParent() {
+        let parent = TestFixtures.makeReminder(
+            title: "Pack",
+            dueDate: now.addingTimeInterval(7200),
+            list: list,
+            createdAt: now
+        )
+        let child = TestFixtures.makeReminder(
+            title: "Sunscreen",
+            dueDate: now.addingTimeInterval(3600),
+            list: list,
+            createdAt: now.addingTimeInterval(-1)
+        )
+        let other = TestFixtures.makeReminder(
+            title: "Call mom",
+            dueDate: now.addingTimeInterval(1800),
+            list: list,
+            createdAt: now
+        )
+        XCTAssertTrue(child.indent(preceding: parent))
+
+        let sorted = ReminderFilters.sortForListView([parent, child, other])
+        XCTAssertEqual(sorted.map(\.title), ["Call mom", "Pack", "Sunscreen"])
+    }
+
+    func testVisibleInListKeepsCompletedParentWithIncompleteSubtask() {
+        let parent = TestFixtures.makeReminder(
+            title: "Pack",
+            isCompleted: true,
+            completedAt: now.addingTimeInterval(-10),
+            list: list
+        )
+        let child = TestFixtures.makeReminder(title: "Sunscreen", list: list)
+        XCTAssertTrue(child.indent(preceding: parent))
+
+        let visible = ReminderFilters.visibleInList([parent, child], now: now)
+        XCTAssertEqual(Set(visible.map(\.title)), ["Pack", "Sunscreen"])
+    }
 }

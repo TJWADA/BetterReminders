@@ -221,6 +221,12 @@ struct GlobalSearchReminderRow: View {
                 }
 
                 HStack(spacing: 8) {
+                    if reminder.isSubtask, let parentTitle = reminder.parent?.title, !parentTitle.isEmpty {
+                        Text("Subtask of \(parentTitle)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                     if let list = reminder.list {
                         ListNameBadge(name: list.name, colorHex: list.colorHex)
                     }
@@ -241,6 +247,7 @@ struct GlobalSearchReminderRow: View {
             }
         }
         .padding(.vertical, 2)
+        .padding(.leading, reminder.isSubtask ? 28 : 0)
         .onAppear {
             onBecameVisible?()
         }

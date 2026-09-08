@@ -4,6 +4,7 @@ import BetterRemindersCore
 
 struct ReminderRowView: View {
     @Bindable var reminder: Reminder
+    var indentLevel: Int = 0
     var onCompletionChanged: (() -> Void)? = nil
     var onBecameVisible: (() -> Void)? = nil
 
@@ -44,6 +45,7 @@ struct ReminderRowView: View {
             }
         }
         .padding(.vertical, 2)
+        .padding(.leading, CGFloat(indentLevel) * 28)
         .onAppear {
             onBecameVisible?()
         }

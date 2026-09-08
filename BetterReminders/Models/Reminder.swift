@@ -10,10 +10,14 @@ final class Reminder {
     var priority: Int
     var isCompleted: Bool
     var completedAt: Date?
-    var needsManualSort: Bool
+    var needsManualSort: Bool = false
     var createdAt: Date
     var audioFilePath: String?
     var list: ReminderList?
+    var parent: Reminder?
+    var subtaskSortOrder: Int = 0
+    @Relationship(deleteRule: .cascade, inverse: \Reminder.parent)
+    var subtasks: [Reminder] = []
 
     init(
         id: UUID = UUID(),
@@ -26,7 +30,9 @@ final class Reminder {
         needsManualSort: Bool = false,
         createdAt: Date = Date(),
         audioFilePath: String? = nil,
-        list: ReminderList? = nil
+        list: ReminderList? = nil,
+        parent: Reminder? = nil,
+        subtaskSortOrder: Int = 0
     ) {
         self.id = id
         self.title = title
@@ -39,6 +45,9 @@ final class Reminder {
         self.createdAt = createdAt
         self.audioFilePath = audioFilePath
         self.list = list
+        self.parent = parent
+        self.subtaskSortOrder = subtaskSortOrder
+        self.subtasks = []
     }
 
     var priorityLabel: String {

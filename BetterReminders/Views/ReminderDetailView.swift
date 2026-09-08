@@ -87,23 +87,31 @@ struct ReminderDetailView: View {
                     }
                     .padding(.vertical, 4)
 
-                    Picker("List", selection: Binding(
-                        get: { reminder.list?.id ?? allLists.first?.id ?? UUID() },
-                        set: { newID in
-                            if let newList = allLists.first(where: { $0.id == newID }),
-                               reminder.list?.id != newList.id {
-                                reminder.list = newList
-                            }
+                    if reminder.isSubtask {
+                        if let parentTitle = reminder.parent?.title, !parentTitle.isEmpty {
+                            Text("Subtask of \(parentTitle)")
+                                .foregroundStyle(.secondary)
                         }
-                    )) {
-                        ForEach(allLists) { list in
-                            Label {
-                                Text(list.name)
-                            } icon: {
-                                Image(systemName: list.icon)
-                                    .foregroundStyle(Color(hex: list.colorHex))
+                    } else {
+                        Picker("List", selection: Binding(
+                            get: { reminder.list?.id ?? allLists.first?.id ?? UUID() },
+                            set: { newID in
+                                if let newList = allLists.first(where: { $0.id == newID }),
+                                   reminder.list?.id != newList.id {
+                                    reminder.list = newList
+                                    reminder.syncSubtasksList()
+                                }
                             }
-                            .tag(list.id)
+                        )) {
+                            ForEach(allLists) { list in
+                                Label {
+                                    Text(list.name)
+                                } icon: {
+                                    Image(systemName: list.icon)
+                                        .foregroundStyle(Color(hex: list.colorHex))
+                                }
+                                .tag(list.id)
+                            }
                         }
                     }
                 }
@@ -140,10 +148,21 @@ struct ReminderDetailView: View {
                     }
                 }
             }
-            .confirmationDialog("Delete this reminder?", isPresented: $showingDeleteConfirm, titleVisibility: .visible) {
+            .confirmationDialog(
+                reminder.subtasks.isEmpty
+                    ? "Delete this reminder?"
+                    : "Delete this reminder and its subtasks?",
+                isPresented: $showingDeleteConfirm,
+                titleVisibility: .visible
+            ) {
                 Button("Delete", role: .destructive) {
                     placementEditSession.isDeleting = true
-                    Task { await NotificationSchedulingService.cancel(for: reminder.id) }
+                    let idsToCancel = [reminder.id] + reminder.subtasks.map(\.id)
+                    Task {
+                        for id in idsToCancel {
+                            await NotificationSchedulingService.cancel(for: id)
+                        }
+                    }
                     modelContext.delete(reminder)
                     try? modelContext.save()
                     dismiss()

@@ -50,6 +50,8 @@
 		A10000000000000000000051 /* BetterRemindersCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; };
 		A10000000000000000000052 /* BetterRemindersCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A30000000000000000000007 /* BetterRemindersCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000053 /* Reminder+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000037 /* Reminder+Notifications.swift */; };
+		A1000000000000000000006E /* Reminder+Subtasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006E /* Reminder+Subtasks.swift */; };
+		A1000000000000000000006F /* ReminderSubtaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000006F /* ReminderSubtaskTests.swift */; };
 		A10000000000000000000054 /* ListEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000054 /* ListEditView.swift */; };
 		A10000000000000000000055 /* AddReminderSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000055 /* AddReminderSheet.swift */; };
 		A10000000000000000000056 /* ListDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000056 /* ListDetailView.swift */; };
@@ -137,6 +139,8 @@
 		A20000000000000000000034 /* ReminderParserServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderParserServiceTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000035 /* NotificationSchedulingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSchedulingServiceTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000037 /* Reminder+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Notifications.swift"; sourceTree = "<group>"; };
+		A2000000000000000000006E /* Reminder+Subtasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Reminder+Subtasks.swift"; sourceTree = "<group>"; };
+		A2000000000000000000006F /* ReminderSubtaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSubtaskTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000038 /* BetterRemindersCore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BetterRemindersCore.entitlements; sourceTree = "<group>"; };
 		A20000000000000000000039 /* ActionButtonFlowCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonFlowCoordinator.swift; sourceTree = "<group>"; };
 		A20000000000000000000054 /* ListEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListEditView.swift; sourceTree = "<group>"; };
@@ -265,6 +269,7 @@
 				A20000000000000000000004 /* Reminder.swift */,
 				A20000000000000000000063 /* Reminder+Display.swift */,
 				A20000000000000000000037 /* Reminder+Notifications.swift */,
+				A2000000000000000000006E /* Reminder+Subtasks.swift */,
 				A20000000000000000000061 /* ParsedReminder.swift */,
 				A2000000000000000000006C /* ListClassificationContext.swift */,
 				A20000000000000000000062 /* ListStyle.swift */,
@@ -343,6 +348,7 @@
 			children = (
 				A2000000000000000000002A /* TestFixtures.swift */,
 				A2000000000000000000002B /* ReminderFiltersTests.swift */,
+				A2000000000000000000006F /* ReminderSubtaskTests.swift */,
 				A20000000000000000000033 /* ProcessingJobCleanupServiceTests.swift */,
 				A20000000000000000000034 /* ReminderParserServiceTests.swift */,
 				A2000000000000000000006D /* ListClassificationContextTests.swift */,
@@ -470,6 +476,7 @@
 				A10000000000000000000004 /* Reminder.swift in Sources */,
 				A10000000000000000000063 /* Reminder+Display.swift in Sources */,
 				A10000000000000000000053 /* Reminder+Notifications.swift in Sources */,
+				A1000000000000000000006E /* Reminder+Subtasks.swift in Sources */,
 				A10000000000000000000061 /* ParsedReminder.swift in Sources */,
 				A1000000000000000000006C /* ListClassificationContext.swift in Sources */,
 				A10000000000000000000062 /* ListStyle.swift in Sources */,
@@ -512,6 +519,7 @@
 			files = (
 				A1000000000000000000002A /* TestFixtures.swift in Sources */,
 				A1000000000000000000002B /* ReminderFiltersTests.swift in Sources */,
+				A1000000000000000000006F /* ReminderSubtaskTests.swift in Sources */,
 				A10000000000000000000033 /* ProcessingJobCleanupServiceTests.swift in Sources */,
 				A10000000000000000000034 /* ReminderParserServiceTests.swift in Sources */,
 				A1000000000000000000006D /* ListClassificationContextTests.swift in Sources */,
