@@ -69,3 +69,44 @@ final class ReminderList {
         )
     }
 }
+
+enum PlacementReview {
+    static func shouldRecordCorrection(
+        wasUnconfirmed: Bool,
+        originalListID: UUID?,
+        currentListID: UUID?
+    ) -> Bool {
+        guard wasUnconfirmed, let currentListID else { return false }
+        return originalListID != currentListID
+    }
+
+    @discardableResult
+    static func commitFirstLookMove(
+        wasUnconfirmed: Bool,
+        originalList: ReminderList?,
+        currentList: ReminderList?,
+        reminderTitle: String
+    ) -> Bool {
+        guard shouldRecordCorrection(
+            wasUnconfirmed: wasUnconfirmed,
+            originalListID: originalList?.id,
+            currentListID: currentList?.id
+        ), let currentList else {
+            return false
+        }
+
+        ReminderList.recordMoveCorrection(
+            from: originalList,
+            to: currentList,
+            reminderTitle: reminderTitle
+        )
+        return true
+    }
+
+    static func confirmVisiblePlacements(ids: Set<UUID>, in reminders: [Reminder]) {
+        guard !ids.isEmpty else { return }
+        for reminder in reminders where ids.contains(reminder.id) {
+            reminder.needsManualSort = false
+        }
+    }
+}

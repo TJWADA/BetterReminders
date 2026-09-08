@@ -5,6 +5,7 @@ import BetterRemindersCore
 struct ReminderRowView: View {
     @Bindable var reminder: Reminder
     var onCompletionChanged: (() -> Void)? = nil
+    var onBecameVisible: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -43,5 +44,8 @@ struct ReminderRowView: View {
             }
         }
         .padding(.vertical, 2)
+        .onAppear {
+            onBecameVisible?()
+        }
     }
 }

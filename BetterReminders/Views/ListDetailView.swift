@@ -24,6 +24,7 @@ struct ListDetailView: View {
 
     @State private var newReminderTitle = ""
     @FocusState private var isNewReminderFocused: Bool
+    @State private var seenPlacementIDs: Set<UUID> = []
 
     private var listReminders: [Reminder] {
         _ = listRefreshTick
@@ -47,6 +48,11 @@ struct ListDetailView: View {
                     reminder: reminder,
                     onCompletionChanged: {
                         scheduleGraceRefresh()
+                    },
+                    onBecameVisible: {
+                        if reminder.needsManualSort {
+                            seenPlacementIDs.insert(reminder.id)
+                        }
                     }
                 )
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -126,7 +132,7 @@ struct ListDetailView: View {
             }
         }
         .onDisappear {
-            try? modelContext.save()
+            confirmSeenPlacements()
         }
         .actionButtonRecordingHandlers(
             recorder: recorder,
@@ -173,6 +179,11 @@ struct ListDetailView: View {
                 }
             }
         }
+    }
+
+    private func confirmSeenPlacements() {
+        PlacementReview.confirmVisiblePlacements(ids: seenPlacementIDs, in: allReminders)
+        try? modelContext.save()
     }
 
     private func commitNewReminder() {

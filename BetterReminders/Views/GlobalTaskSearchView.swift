@@ -4,6 +4,7 @@ import BetterRemindersCore
 
 struct GlobalTaskSearchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
 
     @Query(sort: \Reminder.createdAt, order: .reverse) private var allReminders: [Reminder]
     @State private var searchText = ""
@@ -11,6 +12,7 @@ struct GlobalTaskSearchView: View {
     @State private var priorityFilter: PriorityFilter = .all
     @State private var editingReminder: Reminder?
     @FocusState private var searchFocused: Bool
+    @State private var seenPlacementIDs: Set<UUID> = []
 
     private var activeReminders: [Reminder] {
         ReminderFilters.sort(
@@ -61,6 +63,7 @@ struct GlobalTaskSearchView: View {
         .onDisappear {
             searchFocused = false
             searchText = ""
+            confirmSeenPlacements()
         }
     }
 
@@ -134,7 +137,10 @@ struct GlobalTaskSearchView: View {
                     Button {
                         editingReminder = reminder
                     } label: {
-                        GlobalSearchReminderRow(reminder: reminder)
+                        GlobalSearchReminderRow(
+                            reminder: reminder,
+                            onBecameVisible: { markPlacementVisible(reminder) }
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -145,7 +151,10 @@ struct GlobalTaskSearchView: View {
                             Button {
                                 editingReminder = reminder
                             } label: {
-                                GlobalSearchReminderRow(reminder: reminder)
+                                GlobalSearchReminderRow(
+                                    reminder: reminder,
+                                    onBecameVisible: { markPlacementVisible(reminder) }
+                                )
                             }
                             .buttonStyle(.plain)
                         }
@@ -154,6 +163,17 @@ struct GlobalTaskSearchView: View {
             }
             .listStyle(.plain)
         }
+    }
+
+    private func markPlacementVisible(_ reminder: Reminder) {
+        if reminder.needsManualSort {
+            seenPlacementIDs.insert(reminder.id)
+        }
+    }
+
+    private func confirmSeenPlacements() {
+        PlacementReview.confirmVisiblePlacements(ids: seenPlacementIDs, in: allReminders)
+        try? modelContext.save()
     }
 }
 
@@ -179,6 +199,7 @@ struct SortChip: View {
 
 struct GlobalSearchReminderRow: View {
     @Bindable var reminder: Reminder
+    var onBecameVisible: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -220,5 +241,8 @@ struct GlobalSearchReminderRow: View {
             }
         }
         .padding(.vertical, 2)
+        .onAppear {
+            onBecameVisible?()
+        }
     }
 }

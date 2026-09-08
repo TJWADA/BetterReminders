@@ -9,6 +9,10 @@ struct ReminderDetailView: View {
     @Bindable var reminder: Reminder
     @State private var showingDeleteConfirm = false
     @State private var hasDueDate: Bool
+    @State private var placementEditSession = PlacementEditSession()
+
+    private let originalList: ReminderList?
+    private let wasUnconfirmed: Bool
 
     private let priorityOptions: [(value: Int, label: String)] = [
         (0, "None"),
@@ -20,6 +24,8 @@ struct ReminderDetailView: View {
     init(reminder: Reminder) {
         self.reminder = reminder
         _hasDueDate = State(initialValue: reminder.dueDate != nil)
+        originalList = reminder.list
+        wasUnconfirmed = reminder.needsManualSort
     }
 
     var body: some View {
@@ -84,16 +90,9 @@ struct ReminderDetailView: View {
                     Picker("List", selection: Binding(
                         get: { reminder.list?.id ?? allLists.first?.id ?? UUID() },
                         set: { newID in
-                            let sourceList = reminder.list
                             if let newList = allLists.first(where: { $0.id == newID }),
-                               sourceList?.id != newList.id {
-                                ReminderList.recordMoveCorrection(
-                                    from: sourceList,
-                                    to: newList,
-                                    reminderTitle: reminder.title
-                                )
+                               reminder.list?.id != newList.id {
                                 reminder.list = newList
-                                reminder.needsManualSort = false
                             }
                         }
                     )) {
@@ -134,6 +133,7 @@ struct ReminderDetailView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
+                        commitPlacementReviewIfNeeded()
                         try? modelContext.save()
                         Task { await NotificationSchedulingService.schedule(for: reminder) }
                         dismiss()
@@ -142,6 +142,7 @@ struct ReminderDetailView: View {
             }
             .confirmationDialog("Delete this reminder?", isPresented: $showingDeleteConfirm, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
+                    placementEditSession.isDeleting = true
                     Task { await NotificationSchedulingService.cancel(for: reminder.id) }
                     modelContext.delete(reminder)
                     try? modelContext.save()
@@ -151,7 +152,31 @@ struct ReminderDetailView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .onDisappear {
+            commitPlacementReviewIfNeeded()
+        }
     }
+
+    private func commitPlacementReviewIfNeeded() {
+        guard !placementEditSession.didCommit else { return }
+        placementEditSession.didCommit = true
+        guard !placementEditSession.isDeleting else { return }
+
+        let didMove = PlacementReview.commitFirstLookMove(
+            wasUnconfirmed: wasUnconfirmed,
+            originalList: originalList,
+            currentList: reminder.list,
+            reminderTitle: reminder.title
+        )
+        if didMove {
+            reminder.needsManualSort = false
+        }
+    }
+}
+
+private final class PlacementEditSession {
+    var didCommit = false
+    var isDeleting = false
 }
 
 #Preview {
