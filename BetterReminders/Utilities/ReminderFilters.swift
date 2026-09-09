@@ -139,10 +139,11 @@ enum ReminderFilters {
         }
     }
 
-    /// Keeps the given order. Subtasks are grouped under their parent; nothing else is sorted.
+    /// Sibling order among top-level items, with subtasks grouped under their parent.
+    /// Collapsed parents omit their children from the visible list.
     static func sortForListView(_ reminders: [Reminder]) -> [Reminder] {
         let ids = Set(reminders.map(\.id))
-        let topLevel = reminders.filter { $0.parent == nil }
+        let topLevel = Reminder.orderedTopLevel(from: reminders)
 
         var result: [Reminder] = []
         result.reserveCapacity(reminders.count)
@@ -151,13 +152,19 @@ enum ReminderFilters {
         for parent in topLevel {
             result.append(parent)
             placed.insert(parent.id)
+            if parent.areSubtasksCollapsed {
+                for child in parent.orderedSubtasks {
+                    placed.insert(child.id)
+                }
+                continue
+            }
             for child in parent.orderedSubtasks where ids.contains(child.id) {
                 result.append(child)
                 placed.insert(child.id)
             }
         }
 
-        let leftovers = reminders.filter { !placed.contains($0.id) }
+        let leftovers = reminders.filter { !placed.contains($0.id) }.sorted(by: Reminder.siblingSort)
         result.append(contentsOf: leftovers)
         return result
     }

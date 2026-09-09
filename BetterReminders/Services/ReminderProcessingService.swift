@@ -195,7 +195,8 @@ final class ReminderProcessingService {
                 priority: ReminderParserService.priorityValue(from: item.priority),
                 needsManualSort: true,
                 audioFilePath: retainAudioPath,
-                list: targetList
+                list: targetList,
+                subtaskSortOrder: Reminder.nextTopLevelSortOrder(from: targetList.reminders)
             )
             modelContext.insert(reminder)
             lastCreatedTitles.append(item.title)

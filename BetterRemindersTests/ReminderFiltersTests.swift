@@ -142,12 +142,13 @@ final class ReminderFiltersTests: XCTestCase {
         XCTAssertEqual(recentItems.map(\.title), ["Recent"])
     }
 
-    func testSortForListViewPreservesGivenOrder() {
+    func testSortForListViewUsesSiblingOrder() {
         let first = TestFixtures.makeReminder(
             title: "Task1",
             dueDate: now.addingTimeInterval(7200),
             list: list,
-            createdAt: now
+            createdAt: now,
+            subtaskSortOrder: 0
         )
         let second = TestFixtures.makeReminder(
             title: "Task2",
@@ -155,16 +156,18 @@ final class ReminderFiltersTests: XCTestCase {
             isCompleted: true,
             completedAt: now.addingTimeInterval(3),
             list: list,
-            createdAt: now.addingTimeInterval(1)
+            createdAt: now.addingTimeInterval(1),
+            subtaskSortOrder: 1
         )
         let third = TestFixtures.makeReminder(
             title: "Task3",
             list: list,
-            createdAt: now.addingTimeInterval(2)
+            createdAt: now.addingTimeInterval(2),
+            subtaskSortOrder: 2
         )
 
         let sorted = ReminderFilters.sortForListView([third, first, second])
-        XCTAssertEqual(sorted.map(\.title), ["Task3", "Task1", "Task2"])
+        XCTAssertEqual(sorted.map(\.title), ["Task1", "Task2", "Task3"])
     }
 
     func testSortForListViewKeepsSubtasksUnderParent() {
@@ -172,13 +175,15 @@ final class ReminderFiltersTests: XCTestCase {
             title: "Pack",
             dueDate: now.addingTimeInterval(7200),
             list: list,
-            createdAt: now
+            createdAt: now,
+            subtaskSortOrder: 1
         )
         let other = TestFixtures.makeReminder(
             title: "Call mom",
             dueDate: now.addingTimeInterval(1800),
             list: list,
-            createdAt: now.addingTimeInterval(1)
+            createdAt: now.addingTimeInterval(1),
+            subtaskSortOrder: 0
         )
         let child = TestFixtures.makeReminder(
             title: "Sunscreen",
@@ -186,10 +191,21 @@ final class ReminderFiltersTests: XCTestCase {
             list: list,
             createdAt: now.addingTimeInterval(2)
         )
-        XCTAssertTrue(child.indent(preceding: parent))
+        XCTAssertTrue(child.nest(under: parent))
 
         let sorted = ReminderFilters.sortForListView([other, child, parent])
         XCTAssertEqual(sorted.map(\.title), ["Call mom", "Pack", "Sunscreen"])
+    }
+
+    func testSortForListViewHidesCollapsedSubtasks() {
+        let parent = TestFixtures.makeReminder(title: "Pack", list: list, subtaskSortOrder: 0)
+        let child = TestFixtures.makeReminder(title: "Sunscreen", list: list, subtaskSortOrder: 1)
+        let other = TestFixtures.makeReminder(title: "Call mom", list: list, subtaskSortOrder: 2)
+        XCTAssertTrue(child.nest(under: parent))
+        parent.areSubtasksCollapsed = true
+
+        let sorted = ReminderFilters.sortForListView([parent, child, other])
+        XCTAssertEqual(sorted.map(\.title), ["Pack", "Call mom"])
     }
 
     func testVisibleInListKeepsCompletedParentWithIncompleteSubtask() {
@@ -200,7 +216,7 @@ final class ReminderFiltersTests: XCTestCase {
             list: list
         )
         let child = TestFixtures.makeReminder(title: "Sunscreen", list: list)
-        XCTAssertTrue(child.indent(preceding: parent))
+        XCTAssertTrue(child.nest(under: parent))
 
         let visible = ReminderFilters.visibleInList([parent, child], now: now)
         XCTAssertEqual(Set(visible.map(\.title)), ["Pack", "Sunscreen"])

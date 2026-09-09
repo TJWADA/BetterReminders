@@ -15,9 +15,10 @@ enum TestFixtures {
         completedAt: Date? = nil,
         needsManualSort: Bool = false,
         list: ReminderList? = nil,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        subtaskSortOrder: Int = 0
     ) -> Reminder {
-        Reminder(
+        let reminder = Reminder(
             title: title,
             rawTranscript: transcript,
             dueDate: dueDate,
@@ -26,7 +27,12 @@ enum TestFixtures {
             completedAt: completedAt,
             needsManualSort: needsManualSort,
             createdAt: createdAt,
-            list: list
+            list: list,
+            subtaskSortOrder: subtaskSortOrder
         )
+        if let list, !list.reminders.contains(where: { $0.id == reminder.id }) {
+            list.reminders.append(reminder)
+        }
+        return reminder
     }
 }

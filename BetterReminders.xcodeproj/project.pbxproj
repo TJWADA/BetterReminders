@@ -65,6 +65,7 @@
 		A10000000000000000000062 /* ListStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000062 /* ListStyle.swift */; };
 		A10000000000000000000063 /* Reminder+Display.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000063 /* Reminder+Display.swift */; };
 		A10000000000000000000066 /* ReminderRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000066 /* ReminderRowView.swift */; };
+		A10000000000000000000070 /* ReminderListTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000070 /* ReminderListTableView.swift */; };
 		A1000000000000000000005B /* SharedUserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005B /* SharedUserDefaults.swift */; };
 		A1000000000000000000005C /* RecordingValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005C /* RecordingValidation.swift */; };
 		A1000000000000000000005E /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000005E /* AppConfiguration.swift */; };
@@ -149,6 +150,7 @@
 		A2000000000000000000006A /* RecordingSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingSheetView.swift; sourceTree = "<group>"; };
 		A2000000000000000000006B /* GlobalTaskSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalTaskSearchView.swift; sourceTree = "<group>"; };
 		A20000000000000000000066 /* ReminderRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderRowView.swift; sourceTree = "<group>"; };
+		A20000000000000000000070 /* ReminderListTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderListTableView.swift; sourceTree = "<group>"; };
 		A2000000000000000000005B /* SharedUserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedUserDefaults.swift; sourceTree = "<group>"; };
 		A2000000000000000000005C /* RecordingValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingValidation.swift; sourceTree = "<group>"; };
 		A2000000000000000000005D /* RecordingFlowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFlowController.swift; sourceTree = "<group>"; };
@@ -328,6 +330,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000066 /* ReminderRowView.swift */,
+				A20000000000000000000070 /* ReminderListTableView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -503,6 +506,7 @@
 				A1000000000000000000006A /* RecordingSheetView.swift in Sources */,
 				A1000000000000000000006B /* GlobalTaskSearchView.swift in Sources */,
 				A10000000000000000000066 /* ReminderRowView.swift in Sources */,
+				A10000000000000000000070 /* ReminderListTableView.swift in Sources */,
 				A10000000000000000000054 /* ListEditView.swift in Sources */,
 				A10000000000000000000055 /* AddReminderSheet.swift in Sources */,
 				A10000000000000000000015 /* ReminderDetailView.swift in Sources */,

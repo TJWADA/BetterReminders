@@ -14,6 +14,7 @@ struct ListDetailView: View {
     @State private var showingSettings = false
     @State private var showingTaskSearch = false
     @State private var editingReminder: Reminder?
+    @State private var movingReminder: Reminder?
 
     @State private var displayTick = 0
     @State private var displayTimer: Timer?
@@ -23,15 +24,24 @@ struct ListDetailView: View {
     @State private var actionButtonError: String?
 
     @State private var newReminderTitle = ""
-    @FocusState private var isNewReminderFocused: Bool
+    @State private var isComposingNewReminder = false
     @State private var seenPlacementIDs: Set<UUID> = []
+    @State private var dropTargetID: UUID?
+    @State private var isNewReminderDropTargeted = false
+
+    private var remindersInList: [Reminder] {
+        _ = listRefreshTick
+        return allReminders.filter { $0.list?.id == list.id }
+    }
 
     private var listReminders: [Reminder] {
-        _ = listRefreshTick
-        let inList = allReminders.filter { $0.list?.id == list.id }
-        return ReminderFilters.sortForListView(
-            ReminderFilters.visibleInList(inList)
+        ReminderFilters.sortForListView(
+            ReminderFilters.visibleInList(remindersInList)
         )
+    }
+
+    private var remindersByID: [UUID: Reminder] {
+        Dictionary(uniqueKeysWithValues: remindersInList.map { ($0.id, $0) })
     }
 
     private var isRecordingPresented: Binding<Bool> {
@@ -42,54 +52,29 @@ struct ListDetailView: View {
     }
 
     var body: some View {
-        List {
-            ForEach(Array(listReminders.enumerated()), id: \.element.id) { index, reminder in
-                ReminderRowView(
-                    reminder: reminder,
-                    indentLevel: reminder.isSubtask ? 1 : 0,
-                    onCompletionChanged: {
-                        scheduleGraceRefresh()
-                    },
-                    onBecameVisible: {
-                        if reminder.needsManualSort {
-                            seenPlacementIDs.insert(reminder.id)
-                        }
-                    }
-                )
-                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                    if reminder.isSubtask {
-                        Button("Outdent") {
-                            reminder.outdent()
-                            HapticHelper.selection()
-                            persistSubtaskChange()
-                        }
-                        .tint(.orange)
-                    } else {
-                        let preceding = index > 0 ? listReminders[index - 1] : nil
-                        if reminder.canIndent(preceding: preceding) {
-                            Button("Indent") {
-                                reminder.indent(preceding: preceding)
-                                HapticHelper.selection()
-                                persistSubtaskChange()
-                            }
-                            .tint(.indigo)
-                        }
-                    }
+        ReminderListTableView(
+            reminders: listReminders,
+            dropTargetID: dropTargetID,
+            isComposerDropTargeted: isNewReminderDropTargeted,
+            refreshToken: listRefreshTick,
+            newReminderTitle: $newReminderTitle,
+            isComposingNewReminder: $isComposingNewReminder,
+            onDropTargetChange: { dropTargetID = $0 },
+            onComposerDropTargetChange: { isNewReminderDropTargeted = $0 },
+            onCompletionChanged: scheduleGraceRefresh,
+            onCollapseChanged: persistListChange,
+            onBecameVisible: { reminder in
+                if reminder.needsManualSort {
+                    seenPlacementIDs.insert(reminder.id)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button("Edit") {
-                        editingReminder = reminder
-                    }
-                    .tint(.accentColor)
-                }
-                .onChange(of: reminder.dueDate) { _, _ in
-                    Task { await NotificationSchedulingService.schedule(for: reminder) }
-                }
-            }
-
-            newReminderRow
-        }
-        .listStyle(.plain)
+            },
+            onEdit: { editingReminder = $0 },
+            onMove: { movingReminder = $0 },
+            onDrop: handleDrop,
+            onDropAtEnd: handleDropAtEnd,
+            onCommitNewReminder: commitNewReminder,
+            onComposerFocusLost: handleComposerFocusLost
+        )
         .navigationTitle(list.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -134,6 +119,11 @@ struct ListDetailView: View {
         .sheet(item: $editingReminder) { reminder in
             ReminderDetailView(reminder: reminder)
         }
+        .sheet(item: $movingReminder) { reminder in
+            ReminderMoveListSheet(reminder: reminder) {
+                persistListChange()
+            }
+        }
         .alert("Microphone Access Required", isPresented: $permissionDenied) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -148,6 +138,8 @@ struct ListDetailView: View {
             Text(actionButtonError ?? "Could not start recording.")
         }
         .onAppear {
+            Reminder.backfillTopLevelSortOrder(from: remindersInList)
+            try? modelContext.save()
             if recorder.isRecording {
                 startDisplayTimer()
             }
@@ -172,21 +164,6 @@ struct ListDetailView: View {
         )
     }
 
-    private var newReminderRow: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "circle")
-                .foregroundStyle(.secondary)
-                .font(.title3)
-
-            TextField("New Reminder", text: $newReminderTitle)
-                .focused($isNewReminderFocused)
-                .onSubmit {
-                    commitNewReminder()
-                }
-        }
-        .padding(.vertical, 2)
-    }
-
     @ViewBuilder
     private var statusBanner: some View {
         if !recorder.isRecording {
@@ -202,7 +179,7 @@ struct ListDetailView: View {
         }
     }
 
-    private func persistSubtaskChange() {
+    private func persistListChange() {
         listRefreshTick += 1
         try? modelContext.save()
     }
@@ -216,12 +193,66 @@ struct ListDetailView: View {
         let trimmed = newReminderTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        let reminder = Reminder(title: trimmed, list: list)
+        let reminder = Reminder(
+            title: trimmed,
+            list: list,
+            subtaskSortOrder: Reminder.nextTopLevelSortOrder(from: remindersInList)
+        )
         modelContext.insert(reminder)
         try? modelContext.save()
         newReminderTitle = ""
         HapticHelper.selection()
-        isNewReminderFocused = true
+        listRefreshTick += 1
+    }
+
+    private func handleComposerFocusLost() {
+        let trimmed = newReminderTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            commitNewReminder()
+        } else {
+            newReminderTitle = ""
+        }
+        isComposingNewReminder = false
+    }
+
+    private func handleDrop(
+        _ payloads: [String],
+        onto target: Reminder,
+        zone: ReminderDropZone
+    ) -> Bool {
+        guard let dragged = draggedReminder(from: payloads) else { return false }
+        let topLevel = Reminder.orderedTopLevel(from: remindersInList)
+        guard let action = ReminderDropResolver.action(
+            dragging: dragged,
+            droppingOn: target,
+            zone: zone,
+            visible: listReminders
+        ) else { return false }
+
+        let applied = dragged.apply(action, topLevel: topLevel)
+        if applied {
+            HapticHelper.selection()
+            persistListChange()
+        }
+        dropTargetID = nil
+        return applied
+    }
+
+    private func handleDropAtEnd(_ payloads: [String]) -> Bool {
+        guard let dragged = draggedReminder(from: payloads) else { return false }
+        let topLevel = Reminder.orderedTopLevel(from: remindersInList)
+        let applied = dragged.apply(.move(under: nil, before: nil), topLevel: topLevel)
+        if applied {
+            HapticHelper.selection()
+            persistListChange()
+        }
+        isNewReminderDropTargeted = false
+        return applied
+    }
+
+    private func draggedReminder(from payloads: [String]) -> Reminder? {
+        guard let raw = payloads.first, let id = UUID(uuidString: raw) else { return nil }
+        return remindersByID[id]
     }
 
     private func scheduleGraceRefresh() {
@@ -258,5 +289,58 @@ struct ListDetailView: View {
     private func stopDisplayTimer() {
         displayTimer?.invalidate()
         displayTimer = nil
+    }
+}
+
+private struct ReminderMoveListSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \ReminderList.sortOrder) private var allLists: [ReminderList]
+    @Bindable var reminder: Reminder
+    var onMoved: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(allLists) { list in
+                    Button {
+                        move(to: list)
+                    } label: {
+                        HStack {
+                            Label {
+                                Text(list.name)
+                                    .foregroundStyle(.primary)
+                            } icon: {
+                                Image(systemName: list.icon)
+                                    .foregroundStyle(Color(hex: list.colorHex))
+                            }
+                            Spacer()
+                            if reminder.list?.id == list.id {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(.tint)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Move to List")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func move(to list: ReminderList) {
+        if reminder.list?.id != list.id {
+            reminder.list = list
+            reminder.syncSubtasksList()
+            onMoved()
+        }
+        dismiss()
     }
 }

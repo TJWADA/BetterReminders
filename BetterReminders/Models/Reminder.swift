@@ -16,6 +16,7 @@ final class Reminder {
     var list: ReminderList?
     var parent: Reminder?
     var subtaskSortOrder: Int = 0
+    var areSubtasksCollapsed: Bool = false
     @Relationship(deleteRule: .cascade, inverse: \Reminder.parent)
     var subtasks: [Reminder] = []
 
@@ -32,7 +33,8 @@ final class Reminder {
         audioFilePath: String? = nil,
         list: ReminderList? = nil,
         parent: Reminder? = nil,
-        subtaskSortOrder: Int = 0
+        subtaskSortOrder: Int = 0,
+        areSubtasksCollapsed: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -47,6 +49,7 @@ final class Reminder {
         self.list = list
         self.parent = parent
         self.subtaskSortOrder = subtaskSortOrder
+        self.areSubtasksCollapsed = areSubtasksCollapsed
         self.subtasks = []
     }
 
@@ -60,6 +63,17 @@ final class Reminder {
     }
 
     func setCompleted(_ completed: Bool, at date: Date = Date()) {
+        applyCompletionState(completed, at: date)
+        if parent == nil {
+            for child in subtasks {
+                child.applyCompletionState(completed, at: date)
+            }
+        } else if !completed, let parent, parent.isCompleted {
+            parent.applyCompletionState(false, at: date)
+        }
+    }
+
+    private func applyCompletionState(_ completed: Bool, at date: Date) {
         isCompleted = completed
         completedAt = completed ? date : nil
     }
