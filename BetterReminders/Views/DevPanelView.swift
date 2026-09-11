@@ -15,6 +15,18 @@ struct DevPanelView: View {
     @State private var speechGranted = false
     @State private var notificationsGranted = false
     @State private var apiKeyConfigured = false
+    @State private var isRunningSpokenSort = false
+    @State private var showingSpokenSortConfirm = false
+    @State private var spokenSortProgress: String?
+    @State private var spokenSortResults: [SpokenSortResult] = []
+
+    private var spokenSortPassedCount: Int {
+        spokenSortResults.filter(\.passed).count
+    }
+
+    private var canRunSpokenSort: Bool {
+        apiKeyConfigured && !isRunningSpokenSort && !processor.isProcessing
+    }
 
     private var hasRecentActivity: Bool {
         processor.isProcessing
@@ -27,6 +39,7 @@ struct DevPanelView: View {
         NavigationStack {
             Form {
                 statusSection
+                spokenSortTestSection
                 classificationFeedbackSection
                 if hasRecentActivity {
                     jobsSection
@@ -37,7 +50,21 @@ struct DevPanelView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
+                        .disabled(isRunningSpokenSort)
                 }
+            }
+            .interactiveDismissDisabled(isRunningSpokenSort)
+            .confirmationDialog(
+                "Run spoken sort script?",
+                isPresented: $showingSpokenSortConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Reset lists and run", role: .destructive) {
+                    Task { await runSpokenSortScript() }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This replaces all lists with the test fixture and deletes existing reminders.")
             }
             .onAppear {
                 refreshStatus()
@@ -59,6 +86,97 @@ struct DevPanelView: View {
             statusRow("Speech", value: speechGranted ? "Granted" : "Denied", isGood: speechGranted)
             statusRow("Notifications", value: notificationsGranted ? "Granted" : "Denied", isGood: notificationsGranted)
         }
+    }
+
+    private var spokenSortTestSection: some View {
+        Section("Spoken Sort Test") {
+            Button("Run spoken sort script") {
+                showingSpokenSortConfirm = true
+            }
+            .disabled(!canRunSpokenSort)
+
+            if !apiKeyConfigured {
+                Text("Add an OpenAI API key in Settings to run this script.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let spokenSortProgress {
+                Text(spokenSortProgress)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if !spokenSortResults.isEmpty {
+                Text("\(spokenSortPassedCount) of \(spokenSortResults.count) passed")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(spokenSortPassedCount == spokenSortResults.count ? Color.green : Color.orange)
+
+                ForEach(spokenSortResults) { result in
+                    spokenSortResultRow(result)
+                }
+            }
+        }
+    }
+
+    private func spokenSortResultRow(_ result: SpokenSortResult) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(result.say)
+                    .font(.caption)
+                Spacer()
+                Text(result.passed ? "Pass" : "Fail")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(result.passed ? Color.green : failColor(for: result))
+            }
+            Text("Expected: \(result.expectedLists.joined(separator: ", "))")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            if result.actualLists.isEmpty {
+                Text(result.errorMessage ?? "Actual: none")
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+            } else {
+                Text("Actual: \(zippedPlacements(result))")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+        .textSelection(.enabled)
+    }
+
+    private func failColor(for result: SpokenSortResult) -> Color {
+        switch result.kind {
+        case .borderline, .split:
+            return .orange
+        case .clear, .catchAll:
+            return .red
+        }
+    }
+
+    private func zippedPlacements(_ result: SpokenSortResult) -> String {
+        zip(result.actualTitles, result.actualLists)
+            .map { "\($0) → \($1)" }
+            .joined(separator: "; ")
+    }
+
+    private func runSpokenSortScript() async {
+        isRunningSpokenSort = true
+        spokenSortResults = []
+        spokenSortProgress = "Preparing lists…"
+        refreshStatus()
+
+        let results = await SpokenSortTestScript.run(
+            modelContext: modelContext,
+            processor: processor
+        ) { current, total, phrase in
+            spokenSortProgress = "Parsing \(current) of \(total): \(phrase)"
+        }
+
+        spokenSortResults = results
+        spokenSortProgress = nil
+        isRunningSpokenSort = false
     }
 
     private var classificationFeedbackSection: some View {

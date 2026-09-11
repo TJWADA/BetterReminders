@@ -3,9 +3,16 @@ import SwiftData
 import UserNotifications
 import BetterRemindersCore
 
+struct CreatedPlacement: Equatable {
+    let title: String
+    let listName: String
+}
+
 @Observable
 final class ReminderProcessingService {
     static let shared = ReminderProcessingService()
+
+    static let debugTranscriptAudioPath = "debug://transcript"
 
     private(set) var isProcessing = false
     private(set) var currentStatus: JobStatus?
@@ -44,7 +51,7 @@ final class ReminderProcessingService {
             let transcript = try await SpeechService.transcribe(audioURL: audioURL)
             job.transcript = transcript
 
-            try await runParsingPipeline(
+            _ = try await runParsingPipeline(
                 job: job,
                 transcript: transcript,
                 modelContext: modelContext,
@@ -109,7 +116,7 @@ final class ReminderProcessingService {
         job.errorMessage = nil
 
         do {
-            try await runParsingPipeline(
+            _ = try await runParsingPipeline(
                 job: job,
                 transcript: transcript,
                 modelContext: modelContext,
@@ -127,13 +134,55 @@ final class ReminderProcessingService {
     }
 
     @MainActor
+    func processTranscript(
+        _ transcript: String,
+        modelContext: ModelContext,
+        sendNotification: Bool = true
+    ) async -> [CreatedPlacement] {
+        guard !isProcessing else { return [] }
+
+        isProcessing = true
+        lastError = nil
+        lastCreatedTitles = []
+        currentStatus = .parsing
+
+        let job = ProcessingJob(
+            status: .parsing,
+            audioFilePath: Self.debugTranscriptAudioPath,
+            transcript: transcript
+        )
+        modelContext.insert(job)
+
+        do {
+            let placements = try await runParsingPipeline(
+                job: job,
+                transcript: transcript,
+                modelContext: modelContext,
+                retainAudioPath: nil,
+                sendNotification: sendNotification
+            )
+            isProcessing = false
+            return placements
+        } catch {
+            job.status = .failed
+            job.errorMessage = error.localizedDescription
+            currentStatus = .failed
+            lastError = error.localizedDescription
+            try? modelContext.save()
+            isProcessing = false
+            return []
+        }
+    }
+
+    @MainActor
     private func runParsingPipeline(
         job: ProcessingJob,
         transcript: String,
         modelContext: ModelContext,
         defaultList: ReminderList? = nil,
-        retainAudioPath: String?
-    ) async throws {
+        retainAudioPath: String?,
+        sendNotification: Bool = true
+    ) async throws -> [CreatedPlacement] {
         currentStatus = .parsing
         job.status = .parsing
         try modelContext.save()
@@ -151,7 +200,7 @@ final class ReminderProcessingService {
             listContexts: listContexts
         )
 
-        _ = await insertParsedReminders(
+        let placements = await insertParsedReminders(
             parsed.reminders,
             transcript: transcript,
             lists: lists,
@@ -164,7 +213,10 @@ final class ReminderProcessingService {
         currentStatus = .done
         try modelContext.save()
         ProcessingJobCleanupService.cleanup(modelContext: modelContext)
-        await sendConfirmationNotification(titles: lastCreatedTitles)
+        if sendNotification {
+            await sendConfirmationNotification(titles: lastCreatedTitles)
+        }
+        return placements
     }
 
     @MainActor
@@ -175,10 +227,8 @@ final class ReminderProcessingService {
         defaultList: ReminderList? = nil,
         retainAudioPath: String?,
         modelContext: ModelContext
-    ) async -> (firstTitle: String?, firstListName: String?, firstListIcon: String?) {
-        var firstTitle: String?
-        var firstListName: String?
-        var firstListIcon: String?
+    ) async -> [CreatedPlacement] {
+        var placements: [CreatedPlacement] = []
 
         for item in items {
             let matchedList = ListSeeder.findList(named: item.list, in: lists)
@@ -200,16 +250,11 @@ final class ReminderProcessingService {
             )
             modelContext.insert(reminder)
             lastCreatedTitles.append(item.title)
+            placements.append(CreatedPlacement(title: item.title, listName: targetList.name))
             await NotificationSchedulingService.schedule(for: reminder)
-
-            if firstTitle == nil {
-                firstTitle = item.title
-                firstListName = targetList.name
-                firstListIcon = targetList.icon
-            }
         }
 
-        return (firstTitle, firstListName, firstListIcon)
+        return placements
     }
 
     private func sendConfirmationNotification(titles: [String]) async {
