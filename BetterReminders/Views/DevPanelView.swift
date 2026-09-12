@@ -17,8 +17,14 @@ struct DevPanelView: View {
     @State private var apiKeyConfigured = false
     @State private var isRunningSpokenSort = false
     @State private var showingSpokenSortConfirm = false
+    @State private var selectedSpokenSortPresetID = SpokenSortCatalog.fitnessSplit.id
+    @State private var lastSpokenSortPresetName: String?
     @State private var spokenSortProgress: String?
     @State private var spokenSortResults: [SpokenSortResult] = []
+
+    private var selectedSpokenSortPreset: SpokenSortPreset {
+        SpokenSortCatalog.preset(id: selectedSpokenSortPresetID)
+    }
 
     private var spokenSortPassedCount: Int {
         spokenSortResults.filter(\.passed).count
@@ -55,7 +61,7 @@ struct DevPanelView: View {
             }
             .interactiveDismissDisabled(isRunningSpokenSort)
             .confirmationDialog(
-                "Run spoken sort script?",
+                "Run \(selectedSpokenSortPreset.name)?",
                 isPresented: $showingSpokenSortConfirm,
                 titleVisibility: .visible
             ) {
@@ -64,7 +70,7 @@ struct DevPanelView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("This replaces all lists with the test fixture and deletes existing reminders.")
+                Text("This replaces all lists with \(selectedSpokenSortPreset.name) and deletes existing reminders.")
             }
             .onAppear {
                 refreshStatus()
@@ -90,6 +96,17 @@ struct DevPanelView: View {
 
     private var spokenSortTestSection: some View {
         Section("Spoken Sort Test") {
+            Picker("Persona", selection: $selectedSpokenSortPresetID) {
+                ForEach(SpokenSortCatalog.all) { preset in
+                    Text(preset.name).tag(preset.id)
+                }
+            }
+            .disabled(isRunningSpokenSort)
+
+            Text(selectedSpokenSortPreset.summary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             Button("Run spoken sort script") {
                 showingSpokenSortConfirm = true
             }
@@ -108,7 +125,7 @@ struct DevPanelView: View {
             }
 
             if !spokenSortResults.isEmpty {
-                Text("\(spokenSortPassedCount) of \(spokenSortResults.count) passed")
+                Text(spokenSortResultsHeader)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(spokenSortPassedCount == spokenSortResults.count ? Color.green : Color.orange)
 
@@ -117,6 +134,11 @@ struct DevPanelView: View {
                 }
             }
         }
+    }
+
+    private var spokenSortResultsHeader: String {
+        let name = lastSpokenSortPresetName ?? selectedSpokenSortPreset.name
+        return "\(name): \(spokenSortPassedCount) of \(spokenSortResults.count) passed"
     }
 
     private func spokenSortResultRow(_ result: SpokenSortResult) -> some View {
@@ -162,16 +184,19 @@ struct DevPanelView: View {
     }
 
     private func runSpokenSortScript() async {
+        let preset = selectedSpokenSortPreset
         isRunningSpokenSort = true
         spokenSortResults = []
-        spokenSortProgress = "Preparing lists…"
+        lastSpokenSortPresetName = preset.name
+        spokenSortProgress = "\(preset.name): preparing lists…"
         refreshStatus()
 
         let results = await SpokenSortTestScript.run(
+            preset: preset,
             modelContext: modelContext,
             processor: processor
         ) { current, total, phrase in
-            spokenSortProgress = "Parsing \(current) of \(total): \(phrase)"
+            spokenSortProgress = "\(preset.name) \(current) / \(total): \(phrase)"
         }
 
         spokenSortResults = results

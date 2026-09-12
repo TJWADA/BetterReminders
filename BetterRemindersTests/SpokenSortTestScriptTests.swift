@@ -45,6 +45,16 @@ final class SpokenSortTestScriptTests: XCTestCase {
         )
     }
 
+    func testCatalogPresetsHaveUniqueIdsAndIncludeGeneral() {
+        let ids = SpokenSortCatalog.all.map(\.id)
+        XCTAssertEqual(ids.count, Set(ids).count)
+        XCTAssertEqual(ids, ["fitnessSplit", "firstRun", "student", "household", "minimal"])
+        for preset in SpokenSortCatalog.all {
+            XCTAssertTrue(preset.lists.contains { $0.name == "General" })
+            XCTAssertFalse(preset.utterances.isEmpty)
+        }
+    }
+
     func testPrepareListsReplacesExtrasAndClearsReminders() throws {
         let container = try makeContainer()
         let context = container.mainContext
@@ -78,13 +88,13 @@ final class SpokenSortTestScriptTests: XCTestCase {
         context.insert(TestFixtures.makeReminder(title: "Text Mom", list: personal))
         try context.save()
 
-        SpokenSortTestScript.prepareLists(modelContext: context)
+        SpokenSortTestScript.prepareLists(SpokenSortCatalog.fitnessSplit, modelContext: context)
 
         let lists = try context.fetch(
             FetchDescriptor<ReminderList>(sortBy: [SortDescriptor(\.sortOrder)])
         )
         let names = lists.map(\.name)
-        XCTAssertEqual(names, SpokenSortTestScript.lists.map(\.name))
+        XCTAssertEqual(names, SpokenSortCatalog.fitnessSplit.lists.map(\.name))
         XCTAssertFalse(names.contains("Personal"))
 
         let groceriesList = try XCTUnwrap(ListSeeder.findList(named: "Groceries", in: lists))
@@ -104,19 +114,85 @@ final class SpokenSortTestScriptTests: XCTestCase {
         XCTAssertTrue(remainingReminders.isEmpty)
     }
 
-    func testPrepareListsCreatesFixtureOnEmptyStore() throws {
+    func testPrepareListsCreatesFitnessFixtureOnEmptyStore() throws {
         let container = try makeContainer()
         let context = container.mainContext
 
-        SpokenSortTestScript.prepareLists(modelContext: context)
+        SpokenSortTestScript.prepareLists(SpokenSortCatalog.fitnessSplit, modelContext: context)
 
         let lists = try context.fetch(
             FetchDescriptor<ReminderList>(sortBy: [SortDescriptor(\.sortOrder)])
         )
-        XCTAssertEqual(lists.map(\.name), SpokenSortTestScript.lists.map(\.name))
-        XCTAssertEqual(lists.map(\.listDescription), SpokenSortTestScript.lists.map(\.description))
+        XCTAssertEqual(lists.map(\.name), SpokenSortCatalog.fitnessSplit.lists.map(\.name))
+        XCTAssertEqual(lists.map(\.listDescription), SpokenSortCatalog.fitnessSplit.lists.map(\.description))
         XCTAssertEqual(lists.first?.name, "General")
         XCTAssertTrue(lists.first?.isDefault ?? false)
+    }
+
+    func testPrepareStudentLeavesNoWorkoutOrPersonal() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        context.insert(
+            ReminderList(
+                name: "Workout",
+                icon: "figure.run",
+                colorHex: "5AC8FA",
+                sortOrder: 0
+            )
+        )
+        context.insert(
+            ReminderList(
+                name: "Personal",
+                icon: "person.fill",
+                colorHex: "AF52DE",
+                sortOrder: 1
+            )
+        )
+        try context.save()
+
+        SpokenSortTestScript.prepareLists(SpokenSortCatalog.student, modelContext: context)
+
+        let names = try context.fetch(
+            FetchDescriptor<ReminderList>(sortBy: [SortDescriptor(\.sortOrder)])
+        ).map(\.name)
+        XCTAssertEqual(names, SpokenSortCatalog.student.lists.map(\.name))
+        XCTAssertFalse(names.contains("Workout"))
+        XCTAssertFalse(names.contains("Personal"))
+        XCTAssertTrue(names.contains("CSE 121"))
+    }
+
+    func testPrepareMinimalIsExactlyGeneralGroceriesWorkout() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        SpokenSortTestScript.prepareLists(SpokenSortCatalog.minimal, modelContext: context)
+
+        let lists = try context.fetch(
+            FetchDescriptor<ReminderList>(sortBy: [SortDescriptor(\.sortOrder)])
+        )
+        XCTAssertEqual(lists.map(\.name), ["General", "Groceries", "Workout"])
+    }
+
+    func testPrepareFirstRunHasPersonalAndNoWorkout() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        SpokenSortTestScript.prepareLists(SpokenSortCatalog.firstRun, modelContext: context)
+
+        let lists = try context.fetch(
+            FetchDescriptor<ReminderList>(sortBy: [SortDescriptor(\.sortOrder)])
+        )
+        let names = lists.map(\.name)
+        XCTAssertTrue(names.contains("Personal"))
+        XCTAssertTrue(names.contains("Health"))
+        XCTAssertFalse(names.contains("Workout"))
+        XCTAssertEqual(names, ListSeeder.defaultLists.map(\.name))
+
+        let health = try XCTUnwrap(ListSeeder.findList(named: "Health", in: lists))
+        XCTAssertEqual(
+            health.listDescription,
+            "Exercise, appointments, medications, and wellness."
+        )
     }
 
     private func makeContainer() throws -> ModelContainer {
